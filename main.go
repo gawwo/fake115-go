@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fake115/config"
-	"fake115/utils"
 	"flag"
 	"fmt"
+	"github.com/gawwo/fake115-go/config"
+	"github.com/gawwo/fake115-go/utils"
 )
 
 func init() {

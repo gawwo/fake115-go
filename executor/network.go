@@ -2,8 +2,8 @@ package executor
 
 import (
 	"encoding/json"
-	"fake115/config"
-	"fake115/utils"
+	"github.com/gawwo/fake115-go/config"
+	"github.com/gawwo/fake115-go/utils"
 )
 
 type userInfo struct {

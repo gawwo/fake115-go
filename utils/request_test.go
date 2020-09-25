@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"fake115/config"
 	"fmt"
+	"github.com/gawwo/fake115-go/config"
 	"testing"
 )
 

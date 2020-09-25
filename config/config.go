@@ -1,6 +1,6 @@
 package config
 
-import "fake115/log"
+import "github.com/gawwo/fake115-go/log"
 
 var (
 	ServerName = "fake115"
@@ -8,14 +8,14 @@ var (
 	EndString  = "000000"
 	UserAgent  = "Mozilla/5.0  115disk/11.2.0"
 	RetryTimes = 3
-	UserId = ""
-	UserKey = ""
+	UserId     = ""
+	UserKey    = ""
 
 	// Cookie提供文件读取和命令行设置两种方式；
 	// 文件读取提供默认设置和命令行设置两种方式；
-	Cookie     = ""
+	Cookie            = ""
 	DefaultCookiePath = "cookies.txt"
-	CookiePath = ""
+	CookiePath        = ""
 
 	Logger = log.InitLogger(ServerName, false)
 )

@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"fake115/config"
+	"github.com/gawwo/fake115-go/config"
 	"io/ioutil"
 	"os"
 )
