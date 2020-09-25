@@ -2,6 +2,8 @@ package executor
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/gawwo/fake115-go/config"
 	"github.com/gawwo/fake115-go/utils"
 	"go.uber.org/zap"
@@ -43,4 +45,35 @@ func SetUserInfoConfig() bool {
 	config.UserKey = jsonUserInfo.UserKey
 
 	return true
+}
+
+func ScanDirWithOffset(cid string, offset int) (*NetDir, error) {
+	urls := []string{
+		fmt.Sprintf("https://webapi.115.com/files?aid=1&cid=%s&o=file_name&asc=0&offset=%d&"+
+			"show_dir=1&limit=%d&code=&scid=&snap=0&natsort=1&record_open_time=1&source=&format=json&type=&star=&"+
+			"is_share=&suffix=&fc_mix=1&is_q=&custom_order=", cid, offset, config.Step),
+		fmt.Sprintf("http://aps.115.com/natsort/files.php?aid=1&cid=%s&o=file_name&asc=1&offset=%d&show_dir=1"+
+			"&limit=%d&code=&scid=&snap=0&natsort=1&source=&format=json&type=&star=&is_share=&suffix=&custom_order="+
+			"&fc_mix=", cid, offset, config.Step),
+	}
+
+	for _, url := range urls {
+		headers := config.GetFakeHeaders(true)
+		body, err := utils.Get(url, headers, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		netDir := new(NetDir)
+		err = json.Unmarshal(body, netDir)
+		if err != nil {
+			return nil, err
+		}
+		if netDir.Path == nil {
+			continue
+		} else {
+			return netDir, nil
+		}
+	}
+	return nil, errors.New("both url fail get dir info, maybe login expire")
 }

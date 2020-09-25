@@ -10,12 +10,14 @@ var (
 	RetryTimes = 3
 	UserId     = 0
 	UserKey    = ""
-
+	Step       = 1150
 	// Cookie提供文件读取和命令行设置两种方式；
 	// 文件读取提供默认设置和命令行设置两种方式；
 	Cookie            = ""
 	DefaultCookiePath = "cookies.txt"
 	CookiePath        = ""
+
+	TotalSize = 0
 
 	Logger = log.InitLogger(ServerName, false)
 )

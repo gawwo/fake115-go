@@ -87,7 +87,7 @@ ipython_config.py
 .python-version
 *save/
 
-# celery beat schedule file
+# celery beat schedule dir
 celerybeat-schedule
 
 # SageMath parsed files

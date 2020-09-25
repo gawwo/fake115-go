@@ -11,7 +11,7 @@ func ReadCookieFile() (string, error) {
 	cookieFile, err := os.Open(config.CookiePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			config.Logger.Warn("Fail to open cookie file: " + err.Error())
+			config.Logger.Warn("Fail to open cookie dir: " + err.Error())
 		}
 		return "", err
 	}
