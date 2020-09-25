@@ -134,3 +134,5 @@ dmypy.json
 .log
 logs/
 .pwd
+
+cookies.txt

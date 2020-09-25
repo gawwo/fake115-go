@@ -4,7 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gawwo/fake115-go/config"
+	"github.com/gawwo/fake115-go/executor"
 	"github.com/gawwo/fake115-go/utils"
+	"os"
 )
 
 func init() {
@@ -18,17 +20,18 @@ func init() {
 		cookie, _ := utils.ReadCookieFile()
 		config.Cookie = cookie
 	}
+
+	// 确保cookie在登录状态
+	loggedIn := executor.SetUserInfoConfig()
+	if !loggedIn {
+		fmt.Println("Login expire or fail...")
+		os.Exit(1)
+	}
 }
 
 func main() {
 	flag.Parse()
 	args := flag.Args()
-
-	// 没cookie什么都干不了
-	if config.Cookie == "" {
-		fmt.Println("Load cookie error! Please add cookie or add cookie file path")
-		return
-	}
 
 	if len(args) < 1 {
 		fmt.Println("Too few arguments")

@@ -8,7 +8,7 @@ var (
 	EndString  = "000000"
 	UserAgent  = "Mozilla/5.0  115disk/11.2.0"
 	RetryTimes = 3
-	UserId     = ""
+	UserId     = 0
 	UserKey    = ""
 
 	// Cookie提供文件读取和命令行设置两种方式；
