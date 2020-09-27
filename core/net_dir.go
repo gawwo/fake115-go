@@ -1,4 +1,4 @@
-package executor
+package core
 
 type NetDirTrace struct {
 	Name string `json:"name"`

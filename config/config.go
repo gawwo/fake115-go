@@ -1,12 +1,19 @@
 package config
 
-import "github.com/gawwo/fake115-go/log"
+import (
+	"github.com/gawwo/fake115-go/log"
+	"time"
+)
+
+const (
+	ServerName          = "fake115"
+	AppVer              = "11.2.0"
+	EndString           = "000000"
+	UserAgent           = "Mozilla/5.0  115disk/11.2.0"
+	SpiderCheckInterval = time.Second * 20
+)
 
 var (
-	ServerName = "fake115"
-	AppVer     = "11.2.0"
-	EndString  = "000000"
-	UserAgent  = "Mozilla/5.0  115disk/11.2.0"
 	RetryTimes = 3
 	UserId     = 0
 	UserKey    = ""
@@ -21,7 +28,7 @@ var (
 
 	// 是否处于等待人机验证的状态
 	// 不是一个重要的状态，且可能的操作中都是在处理网络请
-	//求处理之后，冲突可能极小，不加读写锁，随便改
+	// 求处理之后，冲突可能极小，不加读写锁，随便改
 	SpiderVerification = false
 
 	Logger = log.InitLogger(ServerName, false)

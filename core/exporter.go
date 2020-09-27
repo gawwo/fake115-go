@@ -1,4 +1,4 @@
-package executor
+package core
 
 import (
 	"github.com/gawwo/fake115-go/config"

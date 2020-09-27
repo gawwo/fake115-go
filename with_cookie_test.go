@@ -2,17 +2,21 @@ package main
 
 import (
 	"fmt"
+	"github.com/gawwo/fake115-go/core"
 	"github.com/gawwo/fake115-go/dir"
-	"github.com/gawwo/fake115-go/executor"
 	"testing"
 )
 
 func TestScanDirWithOffset(t *testing.T) {
-	executor.ScanDirWithOffset("1932902800904947822", 0)
+	netDir, err := core.ScanDirWithOffset("1932902800904947822", 0)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	fmt.Println(netDir)
 }
 
 func TestNetFileExport(t *testing.T) {
-	netFile := executor.NetFile{Pc: "awzzj1xe4id8sht7o1"}
+	netFile := core.NetFile{Pc: "awzzj1xe4id8sht7o1"}
 	dirObj := new(dir.Dir)
 	netFile.Export(dirObj)
 }

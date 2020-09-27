@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gawwo/fake115-go/config"
-	"github.com/gawwo/fake115-go/executor"
+	"github.com/gawwo/fake115-go/core"
 	"github.com/gawwo/fake115-go/utils"
 	"os"
 )
@@ -22,7 +22,7 @@ func init() {
 	}
 
 	// 确保cookie在登录状态
-	loggedIn := executor.SetUserInfoConfig()
+	loggedIn := core.SetUserInfoConfig()
 	if !loggedIn {
 		fmt.Println("Login expire or fail...")
 		os.Exit(1)

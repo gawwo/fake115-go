@@ -72,7 +72,8 @@ func Request(method, url string, body io.Reader, headers map[string]string) (*ht
 	return res, nil
 }
 
-func Get(urlGet string, headers map[string]string, data map[string]string) ([]byte, error) {
+func get(urlGet string, headers map[string]string, data map[string]string, withResponse bool) (
+	[]byte, *http.Response, error) {
 	// 尝试拼接get的参数
 	if data != nil {
 		getData := url.Values{}
@@ -82,8 +83,26 @@ func Get(urlGet string, headers map[string]string, data map[string]string) ([]by
 		urlGet = urlGet + "?" + getData.Encode()
 	}
 
-	body, err := GetByte(urlGet, headers)
+	if headers == nil {
+		headers = map[string]string{}
+	}
+
+	res, err := Request(http.MethodGet, urlGet, nil, headers)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer res.Body.Close()
+
+	return packBody(res, withResponse)
+}
+
+func Get(urlGet string, headers map[string]string, data map[string]string) ([]byte, error) {
+	body, _, err := get(urlGet, headers, data, false)
 	return body, err
+}
+
+func GetResponse(urlGet string, headers map[string]string, data map[string]string) ([]byte, *http.Response, error) {
+	return get(urlGet, headers, data, true)
 }
 
 func PostForm(urlPost string, headers map[string]string, data map[string]string) ([]byte, error) {
@@ -97,11 +116,11 @@ func PostForm(urlPost string, headers map[string]string, data map[string]string)
 		headers["Content-Type"] = "application/x-www-form-urlencoded"
 	}
 
-	body, err := PostByte(urlPost, headers, postData)
+	body, _, err := postByte(urlPost, headers, postData, false)
 	return body, err
 }
 
-func packBody(res *http.Response) ([]byte, error) {
+func packBody(res *http.Response, withResponse bool) ([]byte, *http.Response, error) {
 	var reader io.ReadCloser
 	switch res.Header.Get("Content-Encoding") {
 	case "gzip":
@@ -115,26 +134,18 @@ func packBody(res *http.Response) ([]byte, error) {
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil && err != io.EOF {
-		return nil, err
+		return nil, nil, err
 	}
-	return body, nil
+
+	if withResponse {
+		return body, res, nil
+	} else {
+		return body, nil, nil
+	}
+
 }
 
-func GetByte(url string, headers map[string]string) ([]byte, error) {
-	if headers == nil {
-		headers = map[string]string{}
-	}
-
-	res, err := Request(http.MethodGet, url, nil, headers)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	return packBody(res)
-}
-
-func PostByte(url string, headers map[string]string, data url.Values) ([]byte, error) {
+func postByte(url string, headers map[string]string, data url.Values, withResponse bool) ([]byte, *http.Response, error) {
 	if headers == nil {
 		headers = map[string]string{}
 	}
@@ -146,9 +157,9 @@ func PostByte(url string, headers map[string]string, data url.Values) ([]byte, e
 
 	res, err := Request(http.MethodPost, url, strings.NewReader(dataString), headers)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer res.Body.Close()
 
-	return packBody(res)
+	return packBody(res, withResponse)
 }

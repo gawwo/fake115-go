@@ -1,4 +1,4 @@
-package executor
+package core
 
 import (
 	"encoding/json"
