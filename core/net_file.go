@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gawwo/fake115-go/config"
-	"github.com/gawwo/fake115-go/dir"
 	"github.com/gawwo/fake115-go/utils"
 	"go.uber.org/zap"
 	"net/http"
@@ -40,7 +39,7 @@ type downloadBody struct {
 // 变量，然后进入循环等待模式，期间一直检测，直到人机验证完成；
 // Note: 只要用到Lock的地方，都要考虑超时问题
 // 将当前网络文件的内容导出到目录中
-func (file *NetFile) Export(dir *dir.Dir) {
+func (file *NetFile) Export() string {
 	// 保证worker不会panic
 	defer func() {
 		if err := recover(); err != nil {
@@ -57,23 +56,18 @@ func (file *NetFile) Export(dir *dir.Dir) {
 
 	url, cookie := file.extractDownloadInfo()
 	if cookie == "" || url == "" {
-		return
+		return ""
 	}
 
 	fileSha1 := file.extractFileSha1(url, cookie)
 	if fileSha1 == "" {
-		return
+		return ""
 	}
 
 	joinStrings := []string{file.Name, strconv.Itoa(file.Size), file.Sha, fileSha1}
 	result := strings.Join(joinStrings, "|")
 
-	// 扫尾工作，添加记录到dir对象，累加文件总大小
-	lock.Lock()
-	dir.Files = append(dir.Files, result)
-	config.TotalSize += file.Size
-	lock.Unlock()
-	return
+	return result
 }
 
 func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {

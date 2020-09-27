@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/gawwo/fake115-go/core"
 	"github.com/gawwo/fake115-go/log"
+	"github.com/gawwo/fake115-go/utils"
 	"sync"
 	"time"
 )
@@ -33,6 +34,8 @@ var (
 	WorkerNumRate = 100
 	WorkerChannel = make(chan core.Task, WorkerNum*WorkerNumRate)
 	WaitGroup     = sync.WaitGroup{}
+	// 信号量池
+	WaitGroupPool = utils.NewWaitGroupPool(WorkerNum)
 
 	// 是否处于等待人机验证的状态
 	// 不是一个重要的状态，且可能的操作中都是在处理网络请
