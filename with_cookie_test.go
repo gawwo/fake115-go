@@ -17,7 +17,11 @@ func TestScanDirWithOffset(t *testing.T) {
 
 // 扫描整个文件夹
 func TestScanDir(t *testing.T) {
-	core.ScanDir("1932902800904947822")
+	dir := core.ScanDir("1932902800904947822")
+	_, err := dir.Dump("dump_result.json")
+	if err != nil {
+		t.Error(err.Error())
+	}
 }
 
 func TestNetFileExport(t *testing.T) {

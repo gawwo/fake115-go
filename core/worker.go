@@ -10,9 +10,11 @@ type Task struct {
 	File *NetFile
 }
 
+var WorkerChannel = make(chan Task, config.WorkerNum*config.WorkerNumRate)
+
 func Worker() {
 	// WorkerChannel关闭前一直工作，直到生产者枯竭
-	for task := range config.WorkerChannel {
+	for task := range WorkerChannel {
 		// 有recover，保证这里不会panic，能让任务持续进行
 
 		result := task.File.Export()

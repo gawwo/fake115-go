@@ -19,7 +19,7 @@ func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 		meta = new(dir.Dir)
 	}
 	if sem == nil {
-		sem = config.WaitGroupPool
+		sem = dir.WaitGroupPool
 	} else {
 		// 太多的scanDir worker会导致阻塞，以避免scanDir数量失控
 		sem.Add()
@@ -40,7 +40,7 @@ func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 				// 处理文件
 				// 把任务通过channel派发出去
 				task := Task{Dir: meta, File: item}
-				config.WorkerChannel <- task
+				WorkerChannel <- task
 			} else if item.Cid != "" {
 				// 处理文件夹
 				innerMeta := new(dir.Dir)
@@ -74,7 +74,7 @@ func ScanDir(cid string) *dir.Dir {
 	scanDir(cid, meta, nil)
 
 	// 生产者资源枯竭
-	close(config.WorkerChannel)
+	close(WorkerChannel)
 
 	// 等待消费者完成任务
 	config.WaitGroup.Wait()

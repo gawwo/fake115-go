@@ -67,7 +67,7 @@ func (file *NetFile) Export() string {
 	joinStrings := []string{file.Name, strconv.Itoa(file.Size), file.Sha, fileSha1}
 	result := strings.Join(joinStrings, "|")
 
-	fmt.Printf("文件: %s\t大小: %dMB\n", file.Name, file.Size>>20)
+	fmt.Printf("导出成功，文件: %s\t大小: %dMB\n", file.Name, file.Size>>20)
 	config.Logger.Info("export success", zap.String("name", file.Name), zap.Int("size", file.Size))
 	return result
 }

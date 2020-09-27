@@ -3,8 +3,13 @@ package dir
 import (
 	"bufio"
 	"encoding/json"
+	"github.com/gawwo/fake115-go/config"
+	"github.com/gawwo/fake115-go/utils"
 	"os"
 )
+
+// 扫描文件夹时，用于控制扫描goroutine数量的信号量池
+var WaitGroupPool = utils.NewWaitGroupPool(config.WorkerNum)
 
 type Dir struct {
 	DirName string   `json:"file_name"`
