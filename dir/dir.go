@@ -32,12 +32,15 @@ func (dir *Dir) Dump(outPath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer f.Close()
 
 	writer := bufio.NewWriter(f)
 	_, err = writer.Write(data)
 	if err != nil {
 		return "", nil
 	}
+	writer.Flush()
+
 	return outPath, nil
 }
 
