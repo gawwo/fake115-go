@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/gawwo/fake115-go/core"
-	"github.com/gawwo/fake115-go/dir"
 	"testing"
 )
 
@@ -30,9 +29,8 @@ func TestNetFileExport(t *testing.T) {
 		Sha:  "44451C2DDCE125722FBA9DE1760E55E265023A73",
 		Pc:   "b9zzwuk9729f283dt",
 	}
-	dirObj := new(dir.Dir)
-	netFile.Export(dirObj)
-	if len(dirObj.Files) == 0 {
+	result := netFile.Export()
+	if result == "" {
 		t.Error("export file fail")
 	}
 }
