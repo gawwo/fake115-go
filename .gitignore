@@ -133,6 +133,5 @@ dmypy.json
 # End of https://www.gitignore.io/api/python
 .log
 logs/
-.pwd
 
 cookies.txt
