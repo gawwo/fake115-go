@@ -4,6 +4,7 @@ import (
 	"github.com/gawwo/fake115-go/config"
 	"github.com/gawwo/fake115-go/dir"
 	"github.com/gawwo/fake115-go/utils"
+	"go.uber.org/zap"
 )
 
 // 原地修改meta的信息，当调用结束，meta应该是一个完整的目录
@@ -29,6 +30,7 @@ func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 		dirInfo, err := ScanDirWithOffset(cid, offset)
 		if err != nil {
 			config.Logger.Warn(err.Error())
+			return
 		}
 
 		meta.DirName = dirInfo.Path[len(dirInfo.Path)-1].Name
@@ -39,7 +41,7 @@ func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 				// 把任务通过channel派发出去
 				task := Task{Dir: meta, File: item}
 				config.WorkerChannel <- task
-			} else {
+			} else if item.Cid != "" {
 				// 处理文件夹
 				innerMeta := new(dir.Dir)
 				meta.Dirs = append(meta.Dirs, innerMeta)
@@ -51,6 +53,9 @@ func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 		if dirInfo.Count-(offset+config.Step) > 0 {
 			offset += config.Step
 			continue
+		} else {
+			config.Logger.Info("scan dir success", zap.String("name", meta.DirName))
+			return
 		}
 	}
 
