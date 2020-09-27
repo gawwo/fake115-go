@@ -140,13 +140,13 @@ func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {
 		cookie := downloadCookie(response)
 		if cookie == "" {
 			config.Logger.Warn("get download cookie fail", zap.String("name", file.Name))
-			return
+			return "", ""
 		}
 		return parsedDownloadBody.FileUrl, cookie
 	}
 }
 
-func downloadCookie(response *http.Response) (cookie string) {
+func downloadCookie(response *http.Response) string {
 	newCookie, ok := response.Header["Set-Cookie"]
 	if ok && len(newCookie) >= 1 {
 		cookies := strings.SplitN(newCookie[0], ";", 2)
@@ -154,7 +154,7 @@ func downloadCookie(response *http.Response) (cookie string) {
 			return cookies[0]
 		}
 	}
-	return
+	return ""
 }
 
 func (file *NetFile) extractFileSha1(downloadUrl, cookie string) string {
@@ -168,5 +168,5 @@ func (file *NetFile) extractFileSha1(downloadUrl, cookie string) string {
 	}
 
 	sha1 := utils.Sha1(body)
-	return sha1
+	return strings.ToUpper(sha1)
 }

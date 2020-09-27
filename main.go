@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"github.com/gawwo/fake115-go/config"
 	"github.com/gawwo/fake115-go/core"
+	"github.com/gawwo/fake115-go/log"
 	"github.com/gawwo/fake115-go/utils"
 	"os"
 )
 
 func init() {
+	flag.BoolVar(&config.Debug, "d", false, "Debug mode")
+
 	// 尝试从外来配置设置cookie文件路径
 	flag.StringVar(&config.CookiePath, "cp", config.DefaultCookiePath, "Cookie Path")
 
@@ -32,6 +35,10 @@ func init() {
 func main() {
 	flag.Parse()
 	args := flag.Args()
+
+	if config.Debug {
+		config.Logger = log.InitLogger(config.ServerName, true)
+	}
 
 	if len(args) < 1 {
 		fmt.Println("Too few arguments")

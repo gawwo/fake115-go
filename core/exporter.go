@@ -22,6 +22,7 @@ func ScanDir(cid string, meta *dir.Dir) {
 
 		for _, item := range dirInfo.Data {
 			if item.Fid != "" {
+				// TODO 把任务通过channel派发出去
 
 			}
 		}
