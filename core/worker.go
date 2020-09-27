@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/gawwo/fake115-go/config"
 	"github.com/gawwo/fake115-go/dir"
+	"go.uber.org/zap"
 )
 
 type Task struct {
@@ -19,6 +20,7 @@ func Worker() {
 
 		result := task.File.Export()
 		if result == "" {
+			config.Logger.Warn("export failed", zap.String("name", task.File.Name))
 			continue
 		}
 		// 扫尾工作，添加记录到dir对象，累加文件总大小

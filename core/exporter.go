@@ -5,23 +5,30 @@ import (
 	"github.com/gawwo/fake115-go/dir"
 	"github.com/gawwo/fake115-go/utils"
 	"go.uber.org/zap"
+	"time"
 )
 
 // 原地修改meta的信息，当调用结束，meta应该是一个完整的目录
 func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
+	// 递归调用的初始调用，与其他这个函数的递归调用不一样；
+	// 初始的调用，需要等待一会，让其他递归的这个函数拿到信
+	// 号量，递归的则需要放回自己的信号量；
+	var newest = false
+
 	defer func() {
-		if sem != nil {
+		if !newest {
 			sem.Done()
+		} else {
+			// 给迭代的scanDir一点获取信号量的时间
+			time.Sleep(time.Second)
 		}
 	}()
 
-	if meta == nil {
-		meta = new(dir.Dir)
-	}
 	if sem == nil {
 		sem = dir.WaitGroupPool
+		newest = true
 	} else {
-		// 太多的scanDir worker会导致阻塞，以避免scanDir数量失控
+		// 太多的scanDir worker会导致阻塞，用以避免scanDir数量失控
 		sem.Add()
 	}
 
@@ -43,7 +50,7 @@ func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 				WorkerChannel <- task
 			} else if item.Cid != "" {
 				// 处理文件夹
-				innerMeta := new(dir.Dir)
+				innerMeta := dir.NewDir()
 				meta.Dirs = append(meta.Dirs, innerMeta)
 				go scanDir(item.Cid, innerMeta, sem)
 			}
@@ -70,10 +77,11 @@ func ScanDir(cid string) *dir.Dir {
 
 	// 开启生产者
 	// meta是提取资源的抓手
-	meta := new(dir.Dir)
+	meta := dir.NewDir()
 	scanDir(cid, meta, nil)
 
-	// 生产者资源枯竭
+	// 等待生产者资源枯竭之后，关闭channel
+	dir.WaitGroupPool.Wait()
 	close(WorkerChannel)
 
 	// 等待消费者完成任务

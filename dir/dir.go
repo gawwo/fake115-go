@@ -17,6 +17,10 @@ type Dir struct {
 	Dirs    []*Dir   `json:"dirs"`
 }
 
+func NewDir() *Dir {
+	return &Dir{Dirs: []*Dir{}, Files: []string{}}
+}
+
 func (dir *Dir) Dumps() ([]byte, error) {
 	data, err := json.Marshal(dir)
 	if err != nil {
@@ -33,7 +37,7 @@ func (dir *Dir) Dump(outPath string) (string, error) {
 		return "", err
 	}
 
-	f, err := os.Open(outPath)
+	f, err := os.OpenFile(outPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return "", err
 	}

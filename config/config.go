@@ -15,7 +15,7 @@ const (
 )
 
 var (
-	RetryTimes = 3
+	RetryTimes = 10
 	UserId     = 0
 	UserKey    = ""
 	Step       = 1150
