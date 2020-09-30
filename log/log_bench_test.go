@@ -34,6 +34,10 @@ func (d *Discarder) Write(b []byte) (int, error) {
 	return ioutil.Discard.Write(b)
 }
 
+func TestStabilityLogger(t *testing.T) {
+
+}
+
 func withBenchedLogger(b *testing.B, f func(logger *zap.Logger)) {
 	logger := InitLogger("test", false)
 

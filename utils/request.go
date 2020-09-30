@@ -16,22 +16,29 @@ import (
 	"time"
 )
 
-func Request(method, url string, body io.Reader, headers map[string]string) (*http.Response, error) {
+func NewClient() *http.Client {
 	dialer := &net.Dialer{
-		Timeout:   5 * time.Second,
+		Timeout:   3 * time.Second,
 		KeepAlive: 15 * time.Second,
 	}
 	transport := &http.Transport{
-		//Proxy:               http.ProxyFromEnvironment,
-		DisableCompression:  true,
-		TLSHandshakeTimeout: 3 * time.Second,
+		Proxy:               http.ProxyFromEnvironment,
+		TLSHandshakeTimeout: 2 * time.Second,
 		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
 		DialContext:         dialer.DialContext,
+		MaxIdleConns:        200,
+		MaxIdleConnsPerHost: 50,
 	}
 	client := &http.Client{
 		Transport: transport,
-		Timeout:   20 * time.Second,
+		Timeout:   10 * time.Minute,
 	}
+	return client
+}
+
+var client = NewClient()
+
+func Request(method, url string, body io.Reader, headers map[string]string) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
@@ -60,19 +67,26 @@ func Request(method, url string, body io.Reader, headers map[string]string) (*ht
 		res, requestError = client.Do(req)
 		if requestError == nil && res.StatusCode < 400 {
 			break
-		} else if i >= config.RetryTimes {
-			var errMsg string
-			if requestError != nil {
-				errMsg := fmt.Sprintf("request error: %v", requestError)
-				config.Logger.Error(errMsg)
-			} else {
-				errMsg := fmt.Sprintf("%s request error: HTTP %d", url, res.StatusCode)
-				config.Logger.Error(errMsg)
-			}
-			return nil, fmt.Errorf(errMsg)
-		} else {
-			time.Sleep(1 * time.Second)
 		}
+
+		var errMsg string
+
+		// 网络可能有问题
+		if requestError != nil {
+			errMsg := fmt.Sprintf("request error: %v", requestError)
+			config.Logger.Error(errMsg)
+		} else {
+			// 对方返回的http status code有问题
+			errMsg := fmt.Sprintf("%s request error: HTTP %d", url, res.StatusCode)
+			config.Logger.Error(errMsg)
+		}
+
+		// 重试到最大次数
+		if i >= config.RetryTimes {
+			return nil, fmt.Errorf(errMsg)
+		}
+
+		time.Sleep(time.Second)
 	}
 	return res, nil
 }
@@ -126,6 +140,7 @@ func PostForm(urlPost string, headers map[string]string, data map[string]string)
 func readBody(res *http.Response, withResponse bool) ([]byte, *http.Response, error) {
 	var reader io.ReadCloser
 	defer res.Body.Close()
+
 	switch res.Header.Get("Content-Encoding") {
 	case "gzip":
 		reader, _ = gzip.NewReader(res.Body)

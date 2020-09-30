@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gawwo/fake115-go/config"
 	"testing"
+	"time"
 )
 
 func TestGet(t *testing.T) {
@@ -41,6 +42,31 @@ func TestGet(t *testing.T) {
 	} else {
 		fmt.Println(body)
 	}
+}
+
+var wgp = NewWaitGroupPool(50)
+
+func doMultiRequest(url string) bool {
+	defer wgp.Done()
+
+	start := time.Now().Unix()
+	_, err := Get(url, nil, nil)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+	fmt.Println("elapsed: ", time.Now().Unix()-start)
+	return true
+}
+
+func TestTimeout(t *testing.T) {
+	url := "http://localhost:8441/"
+	for i := 0; i < 5000000; i++ {
+		wgp.Add()
+		go doMultiRequest(url)
+	}
+
+	wgp.Wait()
 }
 
 func TestPostForm(t *testing.T) {
