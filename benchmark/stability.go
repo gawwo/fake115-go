@@ -2,8 +2,11 @@ package benchmark
 
 import (
 	"fmt"
+	"github.com/gawwo/fake115-go/config"
 	"github.com/gawwo/fake115-go/utils"
+	"go.uber.org/zap"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
 	"time"
@@ -49,9 +52,15 @@ func doGet(url string, id int) {
 func doMultiRequest(url string) bool {
 	defer wgp.Done()
 	for i := 0; i < 500000; i++ {
-		_, err := utils.Get(url, nil, nil)
+		sleepTime := rand.Intn(10)
+		duration := time.Second * time.Duration(sleepTime)
+		time.Sleep(duration)
+
+		body, err := utils.Get(url, nil, nil)
 		if err != nil {
-			fmt.Println(err)
+			config.Logger.Error("get fail", zap.String("reason", err.Error()))
+		} else {
+			config.Logger.Info("get success", zap.String("content", string(body)))
 		}
 	}
 	return true

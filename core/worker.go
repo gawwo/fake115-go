@@ -18,7 +18,9 @@ var WorkerChannel = make(chan Task, config.WorkerNum*config.WorkerNumRate)
 func Worker() {
 	// WorkerChannel关闭前一直工作，直到生产者枯竭
 	for task := range WorkerChannel {
-		fmt.Println("channel len: ", len(WorkerChannel))
+		if config.Debug {
+			fmt.Println("channel len: ", len(WorkerChannel))
+		}
 		// 有recover，保证这里不会panic，能让任务持续进行
 		start := time.Now().Unix()
 		result := task.File.Export()

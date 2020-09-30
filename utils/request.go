@@ -16,6 +16,7 @@ import (
 	"time"
 )
 
+// 不要反复创建Client，它应该全局唯一
 func NewClient() *http.Client {
 	dialer := &net.Dialer{
 		Timeout:   3 * time.Second,
