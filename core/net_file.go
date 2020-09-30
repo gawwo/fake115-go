@@ -32,6 +32,7 @@ type downloadBody struct {
 	State   bool   `json:"state"`
 	Msg     string `json:"msg"`
 	FileUrl string `json:"file_url"`
+	Code    int    `json:"code"`
 }
 
 // 开启一定量的worker，通过channel接收任务，channel有一定的缓冲区
@@ -110,10 +111,9 @@ func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {
 			return
 		}
 
-		// TODO 人机验证处理xxx改成触发值
 		// 有多个worker因为时间差，都进入人机检测验证状态，也无所谓
 		// 进入人机验证之后，反复检测状态
-		if parsedDownloadBody.Msg == "xxx" {
+		if parsedDownloadBody.Code == 911 {
 			fmt.Println("发现人机验证，请到115浏览器中播放任意一个视频，完成人机检测...")
 			config.Logger.Warn("found Man-machine verification， waiting...")
 			config.SpiderVerification = true
