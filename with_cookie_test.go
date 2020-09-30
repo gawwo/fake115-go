@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/gawwo/fake115-go/config"
 	"github.com/gawwo/fake115-go/core"
 	"testing"
 )
@@ -22,6 +23,7 @@ func TestScanDir(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
+	fmt.Printf("total size: %dGB\n", config.TotalSize>>30)
 }
 
 func TestNetFileExport(t *testing.T) {

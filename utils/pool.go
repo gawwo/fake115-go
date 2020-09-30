@@ -33,3 +33,7 @@ func (p *WaitGroupPool) Done() {
 func (p *WaitGroupPool) Wait() {
 	p.wg.Wait()
 }
+
+func (p *WaitGroupPool) Size() int {
+	return len(p.pool)
+}

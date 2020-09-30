@@ -8,6 +8,7 @@ import (
 	"github.com/gawwo/fake115-go/config"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -16,21 +17,25 @@ import (
 )
 
 func Request(method, url string, body io.Reader, headers map[string]string) (*http.Response, error) {
+	dialer := &net.Dialer{
+		Timeout:   5 * time.Second,
+		KeepAlive: 15 * time.Second,
+	}
 	transport := &http.Transport{
-		Proxy:               http.ProxyFromEnvironment,
+		//Proxy:               http.ProxyFromEnvironment,
 		DisableCompression:  true,
-		TLSHandshakeTimeout: 10 * time.Second,
+		TLSHandshakeTimeout: 3 * time.Second,
 		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+		DialContext:         dialer.DialContext,
 	}
 	client := &http.Client{
 		Transport: transport,
-		Timeout:   15 * time.Minute,
+		Timeout:   20 * time.Second,
 	}
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
 	}
-
 	// 设置可能缺少的默认参数
 	if _, ok := headers["Connection"]; !ok {
 		headers["Connection"] = "keep-alive"
@@ -91,9 +96,7 @@ func get(urlGet string, headers map[string]string, data map[string]string, withR
 	if err != nil {
 		return nil, nil, err
 	}
-	defer res.Body.Close()
-
-	return packBody(res, withResponse)
+	return readBody(res, withResponse)
 }
 
 func Get(urlGet string, headers map[string]string, data map[string]string) ([]byte, error) {
@@ -120,8 +123,9 @@ func PostForm(urlPost string, headers map[string]string, data map[string]string)
 	return body, err
 }
 
-func packBody(res *http.Response, withResponse bool) ([]byte, *http.Response, error) {
+func readBody(res *http.Response, withResponse bool) ([]byte, *http.Response, error) {
 	var reader io.ReadCloser
+	defer res.Body.Close()
 	switch res.Header.Get("Content-Encoding") {
 	case "gzip":
 		reader, _ = gzip.NewReader(res.Body)
@@ -159,7 +163,6 @@ func postByte(url string, headers map[string]string, data url.Values, withRespon
 	if err != nil {
 		return nil, nil, err
 	}
-	defer res.Body.Close()
 
-	return packBody(res, withResponse)
+	return readBody(res, withResponse)
 }
