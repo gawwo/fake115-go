@@ -33,7 +33,7 @@ func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 	}()
 
 	if sem == nil {
-		sem = dir.WaitGroupPool
+		sem = dir.ProducerWaitGroupPool
 		newest = true
 	} else {
 		// 太多的scanDir worker会导致阻塞，用以避免scanDir数量失控
@@ -78,7 +78,7 @@ func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 
 func ScanDir(cid string) *dir.Dir {
 	// 开启消费者
-	config.WaitGroup.Add(config.WorkerNum)
+	config.ConsumerWaitGroup.Add(config.WorkerNum)
 	for i := 0; i < config.WorkerNum; i++ {
 		go Worker()
 	}
@@ -89,11 +89,24 @@ func ScanDir(cid string) *dir.Dir {
 	scanDir(cid, meta, nil)
 
 	// 等待生产者资源枯竭之后，关闭channel
-	dir.WaitGroupPool.Wait()
+	dir.ProducerWaitGroupPool.Wait()
 	close(WorkerChannel)
 
 	// 等待消费者完成任务
-	config.WaitGroup.Wait()
+	config.ConsumerWaitGroup.Wait()
 
 	return meta
+}
+
+func Export(cid string) {
+	dirMeta := ScanDir(cid)
+	exportName := fmt.Sprintf("%s_%s_%dGB.json", cid, dirMeta.DirName,
+		config.TotalSize>>30)
+	_, err := dirMeta.Dump(exportName)
+	if err != nil {
+		fmt.Println("导出到文件失败")
+		return
+	}
+
+	fmt.Printf("导出文件%s成功", exportName)
 }

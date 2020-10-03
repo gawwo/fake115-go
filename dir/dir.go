@@ -9,7 +9,7 @@ import (
 )
 
 // 扫描文件夹时，用于控制扫描goroutine数量的信号量池
-var WaitGroupPool = utils.NewWaitGroupPool(config.WorkerNum)
+var ProducerWaitGroupPool = utils.NewWaitGroupPool(config.WorkerNum)
 
 type Dir struct {
 	DirName string   `json:"file_name"`
@@ -17,6 +17,7 @@ type Dir struct {
 	Dirs    []*Dir   `json:"dirs"`
 }
 
+// 强行指定初始化，防止json之后，Dirs和Files为null
 func NewDir() *Dir {
 	return &Dir{Dirs: []*Dir{}, Files: []string{}}
 }

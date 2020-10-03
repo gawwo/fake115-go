@@ -28,6 +28,7 @@ func Worker() {
 			config.Logger.Warn("export failed", zap.String("name", task.File.Name))
 			continue
 		}
+
 		// 监控时间太长的请求
 		elapsed := time.Now().Unix() - start
 		if elapsed > int64(3) {
@@ -41,5 +42,5 @@ func Worker() {
 		config.TotalSize += task.File.Size
 		lock.Unlock()
 	}
-	config.WaitGroup.Done()
+	config.ConsumerWaitGroup.Done()
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/gawwo/fake115-go/benchmark"
 	"github.com/gawwo/fake115-go/config"
 	"github.com/gawwo/fake115-go/core"
 	"github.com/gawwo/fake115-go/log"
@@ -40,13 +39,12 @@ func main() {
 	if config.Debug {
 		config.Logger = log.InitLogger(config.ServerName, true)
 	}
-	benchmark.DoMultiRequest()
 
 	if len(args) < 1 {
 		fmt.Println("Too few arguments")
 		return
 	} else if len(args) == 1 {
-		// 导出模式
+		core.Export(args[0])
 	} else if len(args) == 2 {
 		// 导入模式
 	} else {
