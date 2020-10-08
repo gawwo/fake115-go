@@ -68,7 +68,15 @@ func (file *NetFile) Export() string {
 	joinStrings := []string{file.Name, strconv.Itoa(file.Size), file.Sha, fileSha1}
 	result := strings.Join(joinStrings, "|")
 
-	fmt.Printf("导出成功，大小: %dMB\t文件: %s\n", file.Size>>20, file.Name)
+	var formatSize string
+	sizeM := file.Size >> 20
+	if sizeM == 0 {
+		formatSize = "小于1MB"
+	} else {
+		formatSize = fmt.Sprintf("%dMB", sizeM)
+	}
+
+	fmt.Printf("导出成功，大小: %s\t文件: %s\n", formatSize, file.Name)
 	config.Logger.Info("export success", zap.String("name", file.Name), zap.Int("size", file.Size))
 	return result
 }
@@ -80,6 +88,12 @@ func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {
 		// 先检查是否在等待人机验证状态
 		headOff := config.SpiderVerification
 		if headOff {
+			// 太长时间的停滞之后，确保真的有worker去查询，设置
+			// 一个超时时间
+			if int(time.Now().Unix())-config.SpiderStatWaitAliveTime > config.SpiderStatWaitTimeout {
+				config.SpiderStatWaitAliveTime = int(time.Now().Unix())
+				goto Work
+			}
 			config.Logger.Info(fmt.Sprintf("waiting Man-machine verification: %s", file.Name))
 			time.Sleep(config.SpiderCheckInterval / 2)
 			continue
@@ -117,10 +131,11 @@ func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {
 			fmt.Println("发现人机验证，请到115浏览器中播放任意一个视频，完成人机检测...")
 			config.Logger.Warn("found Man-machine verification， waiting...")
 			config.SpiderVerification = true
+			config.SpiderStatWaitAliveTime = int(time.Now().Unix())
 			time.Sleep(config.SpiderCheckInterval)
 			goto Work
 		}
-		// 如果没有人机验证,就尝试取消人机验证状态
+		// 如果有人机验证状态,取消人机验证状态
 		if config.SpiderVerification {
 			config.SpiderVerification = false
 		}

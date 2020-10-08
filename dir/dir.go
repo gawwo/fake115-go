@@ -3,8 +3,10 @@ package dir
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"github.com/gawwo/fake115-go/config"
 	"github.com/gawwo/fake115-go/utils"
+	"go.uber.org/zap"
 	"os"
 )
 
@@ -12,9 +14,15 @@ import (
 var ProducerWaitGroupPool = utils.NewWaitGroupPool(config.WorkerNum)
 
 type Dir struct {
-	DirName string   `json:"file_name"`
+	DirName string   `json:"dir_name"`
 	Files   []string `json:"files"`
 	Dirs    []*Dir   `json:"dirs"`
+}
+
+type dirMake struct {
+	State bool   `json:"state"`
+	Error string `json:"error"`
+	Cid   string `json:"cid"`
 }
 
 // 强行指定初始化，防止json之后，Dirs和Files为null
@@ -60,4 +68,64 @@ func (dir *Dir) Load(fileContent string) (*Dir, error) {
 		return nil, err
 	}
 	return dir, nil
+}
+
+// 递归探测文件夹中是否有文件
+func (dir *Dir) HasFile() bool {
+	if len(dir.Files) > 0 {
+		return true
+	}
+
+	for _, innerDir := range dir.Dirs {
+		if innerDir.HasFile() {
+			return true
+		}
+	}
+	return false
+}
+
+// TODO test
+func (dir *Dir) MakeNetDir(pid string) string {
+	url := "https://webapi.115.com/files/add"
+	for i := 0; i < config.RetryTimes; i++ {
+		var dirName string
+		if i != 0 {
+			dirName = fmt.Sprintf("%s_%d", dir.DirName, i)
+		} else {
+			dirName = dir.DirName
+		}
+
+		data := map[string]string{
+			"pid":   pid,
+			"cname": dirName,
+		}
+		headers := config.GetFakeHeaders(true)
+		body, err := utils.PostForm(url, headers, data)
+		if err != nil {
+			config.Logger.Warn("make dir fail", zap.String("name", dirName))
+			return ""
+		}
+
+		dirMakeResult := new(dirMake)
+		err = json.Unmarshal(body, dirMakeResult)
+		if err != nil {
+			config.Logger.Warn("parse make dir result fail",
+				zap.String("reason", err.Error()),
+				zap.String("name", dir.DirName))
+			return ""
+		}
+
+		if dirMakeResult.State {
+			return dirMakeResult.Cid
+		}
+
+		if dirMakeResult.Error == "该目录名称已存在。" {
+			config.Logger.Warn("dir had exists, change name to continue",
+				zap.String("name", dir.DirName))
+			continue
+		}
+
+		return ""
+	}
+	return ""
 }

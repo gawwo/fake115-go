@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gawwo/fake115-go/config"
 	"github.com/gawwo/fake115-go/core"
+	"github.com/gawwo/fake115-go/dir"
 	"testing"
 )
 
@@ -40,6 +41,11 @@ func TestNetFileExport(t *testing.T) {
 	if result == "" {
 		t.Error("export file fail")
 	}
+}
+
+func TestMakeNetDir(t *testing.T) {
+	testDir := dir.Dir{DirName: "for test"}
+	testDir.MakeNetDir("0")
 }
 
 func TestRecover(t *testing.T) {

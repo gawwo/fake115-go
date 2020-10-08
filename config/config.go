@@ -7,11 +7,12 @@ import (
 )
 
 const (
-	ServerName          = "fake115"
-	AppVer              = "11.2.0"
-	EndString           = "000000"
-	UserAgent           = "Mozilla/5.0  115disk/11.2.0"
-	SpiderCheckInterval = time.Second * 20
+	ServerName             = "fake115"
+	AppVer                 = "11.2.0"
+	EndString              = "000000"
+	UserAgent              = "Mozilla/5.0  115disk/11.2.0"
+	spiderCheckIntervalInt = 20
+	SpiderCheckInterval    = time.Second * spiderCheckIntervalInt
 )
 
 var (
@@ -36,7 +37,9 @@ var (
 	// 是否处于等待人机验证的状态
 	// 不是一个重要的状态，且可能的操作中都是在处理网络请
 	// 求处理之后，冲突可能极小，不加读写锁，随便改
-	SpiderVerification = false
+	SpiderVerification      = false
+	SpiderStatWaitAliveTime = 0
+	SpiderStatWaitTimeout   = spiderCheckIntervalInt * 3
 
 	Logger = log.InitLogger(ServerName, false)
 )

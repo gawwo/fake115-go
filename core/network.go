@@ -61,13 +61,13 @@ func ScanDirWithOffset(cid string, offset int) (*NetDir, error) {
 		headers := config.GetFakeHeaders(true)
 		body, err := utils.Get(url, headers, nil)
 		if err != nil {
-			return nil, err
+			continue
 		}
 
 		netDir := new(NetDir)
 		err = json.Unmarshal(body, netDir)
 		if err != nil {
-			return nil, err
+			continue
 		}
 		if netDir.Path == nil {
 			continue
