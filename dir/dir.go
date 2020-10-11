@@ -84,7 +84,7 @@ func (dir *Dir) HasFile() bool {
 	return false
 }
 
-// TODO test
+// 创建新的文件夹
 func (dir *Dir) MakeNetDir(pid string) string {
 	url := "https://webapi.115.com/files/add"
 	for i := 0; i < config.RetryTimes; i++ {

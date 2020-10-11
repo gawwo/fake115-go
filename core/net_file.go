@@ -35,6 +35,11 @@ type downloadBody struct {
 	Code    int    `json:"code"`
 }
 
+type importBody struct {
+	Status     int `json:"status"`
+	StatusCode int `json:"statuscode"`
+}
+
 // 开启一定量的worker，通过channel接收任务，channel有一定的缓冲区
 // worker在接收到任务后执行任务，当遇到需要人机验证的时候，改变全局
 // 变量，然后进入循环等待模式，期间一直检测，直到人机验证完成；
@@ -66,7 +71,7 @@ func (file *NetFile) Export() string {
 	}
 
 	joinStrings := []string{file.Name, strconv.Itoa(file.Size), file.Sha, fileSha1}
-	result := strings.Join(joinStrings, "|")
+	result := strings.Join(joinStrings, config.LinkSep)
 
 	var formatSize string
 	sizeM := file.Size >> 20
@@ -180,4 +185,83 @@ func (file *NetFile) extractFileSha1(downloadUrl, cookie string) string {
 
 	sha1 := utils.Sha1(body)
 	return strings.ToUpper(sha1)
+}
+
+// 导入时，要指定文件所属的Cid（文件夹），文件夹不存在就需要创建；
+// 创建文件夹的方法是，指定这个文件夹的父文件夹，填入文件夹的名字
+// 之后创建，返回Cid，在做这个任务的时候，Cid需要是创建好的文件夹；
+// 创建文件夹的工作在调用这个函数的地方提前准备好，这里不涉及创建文
+// 件夹
+func (file *NetFile) Import() bool {
+	if file.Cid == "" {
+		config.Logger.Warn("empty target dir")
+		return false
+	}
+
+	target := config.DirTargetPrefix + file.Cid
+	shaFirstJoinStrings := []string{config.UserId, file.Sha, file.Sha, target, "0"}
+	shaFirstRaw := strings.Join(shaFirstJoinStrings, "")
+	shaFirst := utils.Sha1([]byte(shaFirstRaw))
+
+	shaSecondRaw := config.UserKey + shaFirst + config.EndString
+	sig := strings.ToUpper(utils.Sha1([]byte(shaSecondRaw)))
+
+	url := fmt.Sprintf("http://uplb.115.com/3.0/initupload.php?isp=0&appid=0&appversion=%s&format=json&sig=%s",
+		config.AppVer, sig)
+	postData := map[string]string{
+		"preid":    file.Pc,
+		"filename": file.Name,
+		"quickid":  file.Sha,
+		"app_ver":  config.AppVer,
+		"filesize": strconv.Itoa(file.Size),
+		"userid":   config.UserId,
+		"exif":     "",
+		"target":   target,
+		"fileid":   file.Sha,
+	}
+
+	headers := config.GetFakeHeaders(true)
+	body, err := utils.PostForm(url, headers, postData)
+	if err != nil {
+		config.Logger.Warn("import file network error",
+			zap.String("name", file.Name))
+		return false
+	}
+
+	parsedImportBody := new(importBody)
+	err = json.Unmarshal(body, parsedImportBody)
+	if err != nil {
+		config.Logger.Warn("parse import body fail",
+			zap.String("content", string(body)),
+			zap.String("name", file.Name))
+		return false
+	}
+
+	if parsedImportBody.Status == 2 && parsedImportBody.StatusCode == 0 {
+		return true
+	} else {
+		config.Logger.Warn("import info not expect",
+			zap.String("content", string(body)),
+			zap.String("name", file.Name))
+		return false
+	}
+}
+
+// 创建NetFile不一定成功
+func CreateNetFile(fileInfo string) *NetFile {
+	splitStrings := strings.Split(fileInfo, config.LinkSep)
+	if len(splitStrings) != 4 {
+		return nil
+	}
+	size, err := strconv.Atoi(splitStrings[1])
+	if err != nil {
+		return nil
+	}
+
+	return &NetFile{
+		Name: splitStrings[0],
+		Size: size,
+		Sha:  splitStrings[2],
+		Pc:   splitStrings[3],
+	}
 }

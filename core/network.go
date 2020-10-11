@@ -7,6 +7,7 @@ import (
 	"github.com/gawwo/fake115-go/config"
 	"github.com/gawwo/fake115-go/utils"
 	"go.uber.org/zap"
+	"strconv"
 )
 
 type userInfo struct {
@@ -41,7 +42,7 @@ func SetUserInfoConfig() bool {
 	}
 
 	// 设置用户信息
-	config.UserId = jsonUserInfo.UserId
+	config.UserId = strconv.Itoa(jsonUserInfo.UserId)
 	config.UserKey = jsonUserInfo.UserKey
 
 	return true

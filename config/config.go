@@ -13,11 +13,13 @@ const (
 	UserAgent              = "Mozilla/5.0  115disk/11.2.0"
 	spiderCheckIntervalInt = 20
 	SpiderCheckInterval    = time.Second * spiderCheckIntervalInt
+	LinkSep                = "|"
+	DirTargetPrefix        = "U_1_"
 )
 
 var (
 	RetryTimes = 10
-	UserId     = 0
+	UserId     = ""
 	UserKey    = ""
 	Step       = 1150
 	// Cookie提供文件读取和命令行设置两种方式；

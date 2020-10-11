@@ -20,8 +20,8 @@ func TestScanDirWithOffset(t *testing.T) {
 // 扫描整个文件夹
 func TestScanDir(t *testing.T) {
 	config.Debug = true
-	dir := core.ScanDir("1898007427015248622")
-	_, err := dir.Dump("ump_result.json")
+	dirMeta := core.ScanDir("1898007427015248622")
+	_, err := dirMeta.Dump("ump_result.json")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -46,6 +46,14 @@ func TestNetFileExport(t *testing.T) {
 func TestMakeNetDir(t *testing.T) {
 	testDir := dir.Dir{DirName: "for test"}
 	testDir.MakeNetDir("0")
+}
+
+func TestImportFile(t *testing.T) {
+	testFileString := "352Dora.wmv|1447618913|06CCC77F31F4269B5FEB32E7762D0FD" +
+		"7C62B1DB9|F29386C9F238CD578BCCAD824FE549F851551473"
+	netFile := core.CreateNetFile(testFileString)
+	netFile.Cid = "0"
+	netFile.Import()
 }
 
 func TestRecover(t *testing.T) {
