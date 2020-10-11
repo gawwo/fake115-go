@@ -46,7 +46,7 @@ func main() {
 	} else if len(args) == 1 {
 		core.Export(args[0])
 	} else if len(args) == 2 {
-		// 导入模式
+		core.Import(args[0], args[1])
 	} else {
 		fmt.Println("Too much arguments")
 		return

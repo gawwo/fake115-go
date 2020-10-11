@@ -8,18 +8,18 @@ import (
 	"time"
 )
 
-type Task struct {
+type ExportTask struct {
 	Dir  *dir.Dir
 	File *NetFile
 }
 
-var WorkerChannel = make(chan Task, config.WorkerNum*config.WorkerNumRate)
+var ExportWorkerChannel = make(chan ExportTask, config.WorkerNum*config.WorkerNumRate)
 
-func Worker() {
+func ExportWorker() {
 	// WorkerChannel关闭前一直工作，直到生产者枯竭
-	for task := range WorkerChannel {
+	for task := range ExportWorkerChannel {
 		if config.Debug {
-			fmt.Println("channel len: ", len(WorkerChannel))
+			fmt.Println("channel len: ", len(ExportWorkerChannel))
 		}
 		// 有recover，保证这里不会panic，能让任务持续进行
 		start := time.Now().Unix()
@@ -40,6 +40,7 @@ func Worker() {
 		lock.Lock()
 		task.Dir.Files = append(task.Dir.Files, result)
 		config.TotalSize += task.File.Size
+		config.FileCount += 1
 		lock.Unlock()
 	}
 	config.ConsumerWaitGroup.Done()

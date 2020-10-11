@@ -62,12 +62,12 @@ func (dir *Dir) Dump(outPath string) (string, error) {
 	return outPath, nil
 }
 
-func (dir *Dir) Load(fileContent string) (*Dir, error) {
-	err := json.Unmarshal([]byte(fileContent), dir)
+func (dir *Dir) Load(fileContent []byte) error {
+	err := json.Unmarshal(fileContent, dir)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return dir, nil
+	return nil
 }
 
 // 递归探测文件夹中是否有文件
@@ -86,6 +86,14 @@ func (dir *Dir) HasFile() bool {
 
 // 创建新的文件夹
 func (dir *Dir) MakeNetDir(pid string) string {
+	defer func() {
+		if err := recover(); err != nil {
+			config.Logger.Error("create dir error",
+				zap.String("name", dir.DirName),
+				zap.String("reason", fmt.Sprintf("%v", err)))
+		}
+	}()
+
 	url := "https://webapi.115.com/files/add"
 	for i := 0; i < config.RetryTimes; i++ {
 		var dirName string

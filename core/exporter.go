@@ -40,6 +40,22 @@ func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 		sem.Add()
 	}
 
+	defer func() {
+		if config.Debug {
+			fmt.Println("Dir digger on work number: ", sem.Size())
+		}
+		// 防止goroutine过早的退出，过早退出会导致sem的Wait可能过早的
+		// 返回，但实际上下一个goroutine还没有Add到信号量，Wait
+		// 返回后还会导致传递task的通道关闭，进而导致整个任务提早结束
+		if sem.Size() <= 1 {
+			time.Sleep(time.Second * 2)
+		}
+
+		if !newest {
+			sem.Done()
+		}
+	}()
+
 	offset := 0
 	for {
 		dirInfo, err := ScanDirWithOffset(cid, offset)
@@ -54,8 +70,8 @@ func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 			if item.Fid != "" {
 				// 处理文件
 				// 把任务通过channel派发出去
-				task := Task{Dir: meta, File: item}
-				WorkerChannel <- task
+				task := ExportTask{Dir: meta, File: item}
+				ExportWorkerChannel <- task
 			} else if item.Cid != "" {
 				// 处理文件夹
 				innerMeta := dir.NewDir()
@@ -80,7 +96,7 @@ func ScanDir(cid string) *dir.Dir {
 	// 开启消费者
 	config.ConsumerWaitGroup.Add(config.WorkerNum)
 	for i := 0; i < config.WorkerNum; i++ {
-		go Worker()
+		go ExportWorker()
 	}
 
 	// 开启生产者
@@ -90,7 +106,7 @@ func ScanDir(cid string) *dir.Dir {
 
 	// 等待生产者资源枯竭之后，关闭channel
 	dir.ProducerWaitGroupPool.Wait()
-	close(WorkerChannel)
+	close(ExportWorkerChannel)
 
 	// 等待消费者完成任务
 	config.ConsumerWaitGroup.Wait()
@@ -108,5 +124,5 @@ func Export(cid string) {
 		return
 	}
 
-	fmt.Printf("导出文件%s成功", exportName)
+	fmt.Printf("导出文件%s成功, 文件数： %d\n", exportName, config.FileCount)
 }

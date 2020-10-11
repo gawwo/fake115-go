@@ -18,7 +18,7 @@ func TestScanDirWithOffset(t *testing.T) {
 }
 
 // 扫描整个文件夹
-func TestScanDir(t *testing.T) {
+func TestExport(t *testing.T) {
 	config.Debug = true
 	dirMeta := core.ScanDir("1898007427015248622")
 	_, err := dirMeta.Dump("ump_result.json")
@@ -26,6 +26,12 @@ func TestScanDir(t *testing.T) {
 		t.Error(err.Error())
 	}
 	fmt.Printf("total size: %dGB\n", config.TotalSize>>30)
+}
+
+// 手动查看任务执行情况
+func TestImport(t *testing.T) {
+	config.Debug = true
+	core.Import("353522044329243945", "ump_result.json")
 }
 
 func TestNetFileExport(t *testing.T) {
@@ -56,12 +62,22 @@ func TestImportFile(t *testing.T) {
 	netFile.Import()
 }
 
-func TestRecover(t *testing.T) {
+func recoverReturn() string {
+	// params的顺序不影响defer中对它的读取
+	params := false
 	defer func() {
+		fmt.Println(params)
 		if err := recover(); err != nil {
 			fmt.Printf("catch error: %v", err)
 		}
 	}()
 
-	panic("panic once")
+	params = true
+	panic("normal panic")
+}
+
+// 测试错误恢复
+func TestRecover(t *testing.T) {
+	r := recoverReturn()
+	fmt.Println(r)
 }

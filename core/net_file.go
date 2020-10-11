@@ -50,6 +50,7 @@ func (file *NetFile) Export() string {
 	defer func() {
 		if err := recover(); err != nil {
 			config.Logger.Error("export link error",
+				zap.String("name", file.Name),
 				zap.String("reason", fmt.Sprintf("%v", err)))
 
 			// 在报错的情况下，如果依然处于人机验证的阻塞状态，就解除状态。不
@@ -81,7 +82,8 @@ func (file *NetFile) Export() string {
 		formatSize = fmt.Sprintf("%dMB", sizeM)
 	}
 
-	fmt.Printf("导出成功，大小: %s\t文件: %s\n", formatSize, file.Name)
+	nowFormat := time.Now().Format("2006-01-02 15:04:05")
+	fmt.Printf("%s 导出成功，大小: %s\t文件: %s\n", nowFormat, formatSize, file.Name)
 	config.Logger.Info("export success", zap.String("name", file.Name), zap.Int("size", file.Size))
 	return result
 }
@@ -193,6 +195,15 @@ func (file *NetFile) extractFileSha1(downloadUrl, cookie string) string {
 // 创建文件夹的工作在调用这个函数的地方提前准备好，这里不涉及创建文
 // 件夹
 func (file *NetFile) Import() bool {
+	// 保证worker不会panic
+	defer func() {
+		if err := recover(); err != nil {
+			config.Logger.Error("import link error",
+				zap.String("name", file.Name),
+				zap.String("reason", fmt.Sprintf("%v", err)))
+		}
+	}()
+
 	if file.Cid == "" {
 		config.Logger.Warn("empty target dir")
 		return false
@@ -238,6 +249,15 @@ func (file *NetFile) Import() bool {
 	}
 
 	if parsedImportBody.Status == 2 && parsedImportBody.StatusCode == 0 {
+		var formatSize string
+		sizeM := file.Size >> 20
+		if sizeM == 0 {
+			formatSize = "小于1MB"
+		} else {
+			formatSize = fmt.Sprintf("%dMB", sizeM)
+		}
+		nowFormat := time.Now().Format("2006-01-02 15:04:05")
+		fmt.Printf("%s 导出成功，大小: %s\t文件: %s\n", nowFormat, formatSize, file.Name)
 		return true
 	} else {
 		config.Logger.Warn("import info not expect",
@@ -247,7 +267,7 @@ func (file *NetFile) Import() bool {
 	}
 }
 
-// 创建NetFile不一定成功
+// 格式不对，创建NetFile不一定成功
 func CreateNetFile(fileInfo string) *NetFile {
 	splitStrings := strings.Split(fileInfo, config.LinkSep)
 	if len(splitStrings) != 4 {

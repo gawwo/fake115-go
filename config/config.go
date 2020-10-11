@@ -7,14 +7,16 @@ import (
 )
 
 const (
-	ServerName             = "fake115"
-	AppVer                 = "11.2.0"
-	EndString              = "000000"
-	UserAgent              = "Mozilla/5.0  115disk/11.2.0"
+	ServerName = "fake115"
+	AppVer     = "11.2.0"
+	EndString  = "000000"
+	UserAgent  = "Mozilla/5.0  115disk/11.2.0"
+
 	spiderCheckIntervalInt = 20
 	SpiderCheckInterval    = time.Second * spiderCheckIntervalInt
-	LinkSep                = "|"
-	DirTargetPrefix        = "U_1_"
+
+	LinkSep         = "|"
+	DirTargetPrefix = "U_1_"
 )
 
 var (
@@ -29,6 +31,7 @@ var (
 	CookiePath        = ""
 
 	TotalSize = 0
+	FileCount = 0
 	Debug     bool
 
 	WorkerNum     = 10
