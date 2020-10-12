@@ -9,6 +9,7 @@ import (
 	"testing"
 )
 
+// 测试前确定cookie是否已登录
 func init() {
 	// 确保cookie在登录状态
 	loggedIn := core.SetUserInfoConfig()

@@ -1,9 +1,11 @@
 # fake115-go
-115网盘助手Go版本，导出的目录什么样，导入就什么样😲，达到跟雷达功能一致的效果，且没有目录大小限制。
+115网盘助手Go版本，完整保留导出、导入的结构，导出的目录什么样，导入就什么样😲，达到跟雷达功能一致的效果，且没有大小限制。
 
 
 
 目前成功导出、导入多个TB级别的包，大的包甚至高达200TB，70万个文件😄。
+
+<p><img src="static/export.png" alt="example"></p>
 
 
 
@@ -68,6 +70,9 @@ Usage:
 
 ```bash
 fake115 -c "cookiexxxxx" <your export cid>
+
+# 示例
+fake115 1898007427015248622
 ```
 
 
@@ -80,5 +85,8 @@ Usage:
 
 ```bash
 fake115 -c "cookiexxxxx" <your import cid> <import json file path>
+
+# 示例
+fake115 353522044329243945 1898007427015248622_纪录片_438GB.json
 ```
 
