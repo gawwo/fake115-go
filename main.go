@@ -10,7 +10,10 @@ import (
 	"os"
 )
 
+var showVersion bool
+
 func init() {
+	flag.BoolVar(&showVersion, "v", false, "Show version")
 	flag.BoolVar(&config.Debug, "d", false, "Debug mode")
 
 	// 尝试从外来配置设置cookie文件路径
@@ -23,21 +26,26 @@ func init() {
 		cookie, _ := utils.ReadCookieFile()
 		config.Cookie = cookie
 	}
-
-	// 确保cookie在登录状态
-	loggedIn := core.SetUserInfoConfig()
-	if !loggedIn {
-		fmt.Println("Login expire or fail...")
-		os.Exit(1)
-	}
 }
 
 func main() {
 	flag.Parse()
 	args := flag.Args()
 
+	if showVersion {
+		fmt.Println(config.Version)
+		return
+	}
+
 	if config.Debug {
 		config.Logger = log.InitLogger(config.ServerName, true)
+	}
+
+	// 确保cookie在登录状态
+	loggedIn := core.SetUserInfoConfig()
+	if !loggedIn {
+		fmt.Println("Login expire or fail...")
+		os.Exit(1)
 	}
 
 	if len(args) < 1 {

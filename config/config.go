@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	Version    = "1.0.0"
 	ServerName = "fake115"
 	AppVer     = "11.2.0"
 	EndString  = "000000"

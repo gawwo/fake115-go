@@ -5,8 +5,18 @@ import (
 	"github.com/gawwo/fake115-go/config"
 	"github.com/gawwo/fake115-go/core"
 	"github.com/gawwo/fake115-go/dir"
+	"os"
 	"testing"
 )
+
+func init() {
+	// 确保cookie在登录状态
+	loggedIn := core.SetUserInfoConfig()
+	if !loggedIn {
+		fmt.Println("Login expire or fail...")
+		os.Exit(1)
+	}
+}
 
 // 扫描当前层的文件夹，不涉及下一层文件夹
 func TestScanDirWithOffset(t *testing.T) {
