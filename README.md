@@ -9,6 +9,14 @@
 
 
 
+## Download
+
+
+
+https://github.com/gawwo/fake115-go/releases
+
+
+
 ## Installation
 
 
