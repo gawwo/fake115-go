@@ -37,17 +37,13 @@ func importDir(pid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 	}
 
 	var cid string
-	// 起始文件夹本身就已经存在，不需要重新建立，导入的Cid位置就是自身
-	if newest {
-		cid = pid
-	} else {
-		// 需要创建一下文件夹
-		cid = meta.MakeNetDir(pid)
-		if cid == "" {
-			config.Logger.Warn("create dir fail",
-				zap.String("name", meta.DirName))
-			return
-		}
+
+	// 需要创建一下文件夹
+	cid = meta.MakeNetDir(pid)
+	if cid == "" {
+		config.Logger.Warn("create dir fail",
+			zap.String("name", meta.DirName))
+		return
 	}
 
 	// 提交导入任务到channel中
