@@ -257,7 +257,7 @@ func (file *NetFile) Import() bool {
 			formatSize = fmt.Sprintf("%dMB", sizeM)
 		}
 		nowFormat := time.Now().Format("2006-01-02 15:04:05")
-		fmt.Printf("%s 导出成功，大小: %s\t文件: %s\n", nowFormat, formatSize, file.Name)
+		fmt.Printf("%s 导入成功，大小: %s\t文件: %s\n", nowFormat, formatSize, file.Name)
 		return true
 	} else {
 		config.Logger.Warn("import info not expect",
