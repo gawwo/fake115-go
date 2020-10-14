@@ -66,7 +66,7 @@ func Request(method, url string, body io.Reader, headers map[string]string) (*ht
 
 	for i := 1; ; i++ {
 		res, requestError = client.Do(req)
-		if requestError == nil && res.StatusCode < 400 {
+		if requestError == nil && res.StatusCode < 500 {
 			break
 		}
 
