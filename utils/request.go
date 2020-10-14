@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"crypto/tls"
 	"fmt"
-	"github.com/gawwo/fake115-go/config"
 	"io"
 	"io/ioutil"
 	"net"
@@ -15,6 +14,8 @@ import (
 	"strings"
 	"time"
 )
+
+const RetryTimes = 10
 
 // 不要反复创建Client，它应该全局唯一
 func NewClient() *http.Client {
@@ -72,18 +73,8 @@ func Request(method, url string, body io.Reader, headers map[string]string) (*ht
 
 		var errMsg string
 
-		// 网络可能有问题
-		if requestError != nil {
-			errMsg := fmt.Sprintf("request error: %v", requestError)
-			config.Logger.Error(errMsg)
-		} else {
-			// 对方返回的http status code有问题
-			errMsg := fmt.Sprintf("%s request error: HTTP %d", url, res.StatusCode)
-			config.Logger.Error(errMsg)
-		}
-
 		// 重试到最大次数
-		if i >= config.RetryTimes {
+		if i >= RetryTimes {
 			return nil, fmt.Errorf(errMsg)
 		}
 
