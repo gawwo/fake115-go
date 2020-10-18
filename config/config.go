@@ -7,11 +7,12 @@ import (
 )
 
 const (
-	Version    = "1.0.1"
+	Version    = "1.0.2"
 	ServerName = "fake115"
-	AppVer     = "11.2.0"
+	AppVer     = "25.2.2"
 	EndString  = "000000"
-	UserAgent  = "Mozilla/5.0  115disk/11.2.0"
+	UserAgent  = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) " +
+		"Chrome/62.0.3202.94 Safari/537.36 115Browser/23.9.1"
 
 	spiderCheckIntervalInt = 20
 	SpiderCheckInterval    = time.Second * spiderCheckIntervalInt

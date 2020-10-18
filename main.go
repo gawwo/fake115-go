@@ -15,6 +15,7 @@ var showVersion bool
 func init() {
 	flag.BoolVar(&showVersion, "v", false, "Show version")
 	flag.BoolVar(&config.Debug, "d", false, "Debug mode")
+	flag.IntVar(&config.WorkerNum, "n", config.WorkerNum, "worker number")
 
 	// 尝试从外来配置设置cookie文件路径
 	flag.StringVar(&config.CookiePath, "cp", config.DefaultCookiePath, "Cookie Path")
@@ -39,6 +40,10 @@ func main() {
 
 	if config.Debug {
 		config.Logger = log.InitLogger(config.ServerName, true)
+	}
+
+	if config.WorkerNum <= 0 {
+		config.WorkerNum = 1
 	}
 
 	// 确保cookie在登录状态
