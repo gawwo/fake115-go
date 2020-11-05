@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
-	"time"
+	"runtime"
 )
 
 // 除非是起始的文件夹，否则其他所有任务都需要先建文件夹，再进行导入工作
@@ -19,9 +19,7 @@ func importDir(pid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 			fmt.Println("Dir digger on work number: ", sem.Size())
 		}
 
-		if sem.Size() <= 1 {
-			time.Sleep(time.Second * 2)
-		}
+		runtime.Gosched()
 
 		if !newest {
 			sem.Done()

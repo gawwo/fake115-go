@@ -6,6 +6,7 @@ import (
 	"github.com/gawwo/fake115-go/dir"
 	"github.com/gawwo/fake115-go/utils"
 	"go.uber.org/zap"
+	"runtime"
 	"time"
 )
 
@@ -23,9 +24,7 @@ func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 		// 防止goroutine过早的退出，过早退出会导致sem的Wait可能过早的
 		// 返回，但实际上下一个goroutine还没有Add到信号量，Wait
 		// 返回后还会导致传递task的通道关闭，进而导致整个任务提早结束
-		if sem.Size() <= 1 {
-			time.Sleep(time.Second * 2)
-		}
+		runtime.Gosched()
 
 		if !newest {
 			sem.Done()
