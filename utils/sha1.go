@@ -16,7 +16,7 @@ func FileSha1(filePath string) (hexDigest string, err error) {
 	defer f.Close()
 
 	reader := bufio.NewReader(f)
-	buf := make([]byte, 64 << 10)
+	buf := make([]byte, 64<<10)
 	sha1Hash := sha1.New()
 
 	for {
