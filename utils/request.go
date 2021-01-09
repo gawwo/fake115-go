@@ -110,23 +110,19 @@ func Get(urlGet string, headers map[string]string, data map[string]string) ([]by
 	return body, err
 }
 
-func GetResponse(urlGet string, headers map[string]string, data map[string]string) ([]byte, *http.Response, error) {
+func GetWithResponse(urlGet string, headers map[string]string, data map[string]string) ([]byte, *http.Response, error) {
 	return get(urlGet, headers, data, true)
 }
 
 func PostForm(urlPost string, headers map[string]string, data map[string]string) ([]byte, error) {
-	postData := url.Values{}
-	for k, v := range data {
-		postData.Set(k, v)
-	}
-
-	// 不设置content-type，对方就可能认为没发送form body
-	if _, ok := headers["Content-Type"]; !ok {
-		headers["Content-Type"] = "application/x-www-form-urlencoded"
-	}
-
-	body, _, err := postByte(urlPost, headers, postData, false)
+	body, _, err := postByte(urlPost, headers, data, false)
 	return body, err
+}
+
+func PostFormWithResponse(urlPost string, headers map[string]string,
+	data map[string]string) ([]byte, *http.Response, error) {
+	body, response, err := postByte(urlPost, headers, data, true)
+	return body, response, err
 }
 
 func readBody(res *http.Response, withResponse bool) ([]byte, *http.Response, error) {
@@ -156,17 +152,27 @@ func readBody(res *http.Response, withResponse bool) ([]byte, *http.Response, er
 
 }
 
-func postByte(url string, headers map[string]string, data url.Values, withResponse bool) ([]byte, *http.Response, error) {
+func postByte(postUrl string, headers map[string]string, data map[string]string, withResponse bool) ([]byte, *http.Response, error) {
+	postData := url.Values{}
+	for k, v := range data {
+		postData.Set(k, v)
+	}
+
+	// 不设置content-type，对方就可能认为没发送form body
+	if _, ok := headers["Content-Type"]; !ok {
+		headers["Content-Type"] = "application/x-www-form-urlencoded"
+	}
+
 	if headers == nil {
 		headers = map[string]string{}
 	}
 
-	dataString := data.Encode()
+	dataString := postData.Encode()
 	if _, ok := headers["Content-Length"]; !ok {
 		headers["Content-Length"] = strconv.Itoa(len(dataString))
 	}
 
-	res, err := Request(http.MethodPost, url, strings.NewReader(dataString), headers)
+	res, err := Request(http.MethodPost, postUrl, strings.NewReader(dataString), headers)
 	if err != nil {
 		return nil, nil, err
 	}
