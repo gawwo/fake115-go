@@ -8,6 +8,7 @@ import (
 	"github.com/valyala/fastjson"
 	"go.uber.org/zap"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -16,17 +17,8 @@ import (
 
 var (
 	lock       sync.Mutex
-	cipher     *utils.Cipher
 	jsonParser fastjson.Parser
 )
-
-func init() {
-	cipherNew, err := utils.NewCipher()
-	if err != nil {
-		config.Logger.Fatal(err.Error())
-	}
-	cipher = cipherNew
-}
 
 // 115的文件对象，这个对象指向的可能是文件，也可能是文件夹
 type NetFile struct {
@@ -120,6 +112,12 @@ func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {
 		}
 
 	Work:
+		cipher, err := utils.NewCipher()
+		if err != nil {
+			config.Logger.Fatal(err.Error())
+			os.Exit(1)
+		}
+
 		text, err := cipher.Encrypt([]byte(fmt.Sprintf(`{"pickcode":"%s"}`, file.Pc)))
 		if err != nil {
 			config.Logger.Warn("encrypt data error",
