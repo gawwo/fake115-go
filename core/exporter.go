@@ -7,7 +7,6 @@ import (
 	"github.com/gawwo/fake115-go/utils"
 	"go.uber.org/zap"
 	"runtime"
-	"time"
 )
 
 // 原地修改meta的信息，当调用结束，meta应该是一个完整的目录
@@ -38,22 +37,6 @@ func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 		// 太多的scanDir worker会导致阻塞，用以避免scanDir数量失控
 		sem.Add()
 	}
-
-	defer func() {
-		if config.Debug {
-			fmt.Println("Dir digger on work number: ", sem.Size())
-		}
-		// 防止goroutine过早的退出，过早退出会导致sem的Wait可能过早的
-		// 返回，但实际上下一个goroutine还没有Add到信号量，Wait
-		// 返回后还会导致传递task的通道关闭，进而导致整个任务提早结束
-		if sem.Size() <= 1 {
-			time.Sleep(time.Second * 2)
-		}
-
-		if !newest {
-			sem.Done()
-		}
-	}()
 
 	offset := 0
 	for {
