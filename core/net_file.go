@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gawwo/fake115-go/config"
 	"github.com/gawwo/fake115-go/utils"
+	"github.com/valyala/fastjson"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
@@ -13,7 +14,19 @@ import (
 	"time"
 )
 
-var lock sync.Mutex
+var (
+	lock       sync.Mutex
+	cipher     *utils.Cipher
+	jsonParser fastjson.Parser
+)
+
+func init() {
+	cipherNew, err := utils.NewCipher()
+	if err != nil {
+		config.Logger.Fatal(err.Error())
+	}
+	cipher = cipherNew
+}
 
 // 115的文件对象，这个对象指向的可能是文件，也可能是文件夹
 type NetFile struct {
@@ -29,10 +42,10 @@ type NetFile struct {
 }
 
 type downloadBody struct {
-	State   bool   `json:"state"`
-	Msg     string `json:"msg"`
-	FileUrl string `json:"file_url"`
-	Code    int    `json:"code"`
+	State bool   `json:"state"`
+	Msg   string `json:"msg"`
+	Data  string `json:"data"`
+	Errno int    `json:"errno"`
 }
 
 type importBody struct {
@@ -89,7 +102,7 @@ func (file *NetFile) Export() string {
 }
 
 func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {
-	downUrl := "http://webapi.115.com/files/download?pickcode=" + file.Pc
+	downUrl := "https://proapi.115.com/app/chrome/downurl"
 	headers := config.GetFakeHeaders(true)
 	for {
 		// 先检查是否在等待人机验证状态
@@ -107,7 +120,14 @@ func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {
 		}
 
 	Work:
-		body, response, err := utils.GetResponse(downUrl, headers, nil)
+		text, err := cipher.Encrypt([]byte(fmt.Sprintf(`{"pickcode":"%s"}`, file.Pc)))
+		if err != nil {
+			config.Logger.Warn("encrypt data error",
+				zap.String("name", file.Name))
+			return
+		}
+		postData := map[string]string{"data": string(text)}
+		body, response, err := utils.PostFormWithResponse(downUrl, headers, postData)
 		if err != nil {
 			config.Logger.Warn("export file network error",
 				zap.String("name", file.Name))
@@ -134,7 +154,7 @@ func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {
 
 		// 有多个worker因为时间差，都进入人机检测验证状态，也无所谓
 		// 进入人机验证之后，反复检测状态
-		if parsedDownloadBody.Code == 911 {
+		if parsedDownloadBody.Errno == 911 {
 			fmt.Println("发现人机验证，请到115浏览器中播放任意一个视频，完成人机检测...")
 			config.Logger.Warn("found Man-machine verification， waiting...")
 			config.SpiderVerification = true
@@ -148,23 +168,37 @@ func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {
 		}
 
 		// 返回的下载信息中不包含下载地址
-		if parsedDownloadBody.FileUrl == "" {
+		if parsedDownloadBody.Data == "" {
 			config.Logger.Warn("download file body not contain download url",
 				zap.String("content", fmt.Sprintf("%v", parsedDownloadBody)),
 				zap.String("name", file.Name))
 			return
 		}
 		// 下载的时候有自己单独的cookie,提取下载cookie
-		cookie := downloadCookie(response)
-		if cookie == "" {
+		downloadCookie := extractDownloadCookie(response)
+		if downloadCookie == "" {
 			config.Logger.Warn("get download cookie fail", zap.String("name", file.Name))
-			return "", ""
+			return
 		}
-		return parsedDownloadBody.FileUrl, cookie
+
+		downloadUrlContent, err := cipher.Decrypt([]byte(parsedDownloadBody.Data))
+		if err != nil {
+			config.Logger.Warn("decrypt download url error",
+				zap.String("name", file.Name))
+			return
+		}
+
+		extractedDownloadUrl, err := extractDownloadUrl(downloadUrlContent, file.Fid)
+		if err != nil {
+			config.Logger.Warn("parse download url error",
+				zap.String("name", file.Name))
+			return
+		}
+		return extractedDownloadUrl, downloadCookie
 	}
 }
 
-func downloadCookie(response *http.Response) string {
+func extractDownloadCookie(response *http.Response) string {
 	newCookie, ok := response.Header["Set-Cookie"]
 	if ok && len(newCookie) >= 1 {
 		cookies := strings.SplitN(newCookie[0], ";", 2)
@@ -173,6 +207,14 @@ func downloadCookie(response *http.Response) string {
 		}
 	}
 	return ""
+}
+
+func extractDownloadUrl(downloadContent []byte, fileId string) (string, error) {
+	parsedValue, err := jsonParser.ParseBytes(downloadContent)
+	if err != nil {
+		return "", err
+	}
+	return string(parsedValue.GetStringBytes(fileId, "url", "url")), nil
 }
 
 func (file *NetFile) extractFileSha1(downloadUrl, cookie string) string {

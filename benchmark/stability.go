@@ -56,7 +56,7 @@ func doMultiRequest(url string) bool {
 		duration := time.Second * time.Duration(sleepTime)
 		time.Sleep(duration)
 
-		body, _, err := utils.GetResponse(url, nil, nil)
+		body, _, err := utils.GetWithResponse(url, nil, nil)
 		if err != nil {
 			config.Logger.Error("get fail", zap.String("reason", err.Error()))
 		} else {
