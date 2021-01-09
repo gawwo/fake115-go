@@ -36,7 +36,7 @@ var (
 	FileCount = 0
 	Debug     bool
 
-	WorkerNum     = 10
+	WorkerNum     = 5
 	WorkerNumRate = 100
 
 	ConsumerWaitGroup = sync.WaitGroup{}
