@@ -7,7 +7,7 @@
 
 <p><img src="static/export.png" alt="example"></p>
 
-
+已更新新版导出文件方式，感谢`https://github.com/orzogc/fake115uploader`的加密代码😊。
 
 ## Download
 
