@@ -67,9 +67,9 @@ func (file *NetFile) Export() string {
 	}()
 
 	url, cookie := file.extractDownloadInfo()
-	if cookie == "" || url == "" {
-		return ""
-	}
+	//if cookie == "" || url == "" {
+	//	return ""
+	//}
 
 	fileSha1 := file.extractFileSha1(url, cookie)
 	if fileSha1 == "" {
@@ -174,7 +174,7 @@ func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {
 		}
 		// 下载的时候有自己单独的cookie,提取下载cookie
 		downloadCookie := extractDownloadCookie(response)
-		if downloadCookie == "" {
+		if downloadCookie != "" {
 			config.Logger.Warn("get download cookie fail", zap.String("name", file.Name))
 			return
 		}

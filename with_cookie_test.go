@@ -31,8 +31,8 @@ func TestScanDirWithOffset(t *testing.T) {
 // 扫描整个文件夹
 func TestExport(t *testing.T) {
 	config.Debug = true
-	config.WorkerNum = 1
-	dirMeta := core.ScanDir("555030837129773458")
+	config.WorkerNum = 5
+	dirMeta := core.ScanDir("1898007427015248622")
 	_, err := dirMeta.Dump("ump_result.json")
 	if err != nil {
 		t.Error(err.Error())
@@ -43,7 +43,7 @@ func TestExport(t *testing.T) {
 // 手动查看任务执行情况
 func TestImport(t *testing.T) {
 	config.Debug = true
-	core.Import("353522044329243945", "ump_result.json")
+	core.Import("1951041685426014426", "ump_result.json")
 }
 
 func TestNetFileExport(t *testing.T) {
