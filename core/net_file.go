@@ -7,7 +7,6 @@ import (
 	"github.com/gawwo/fake115-go/utils"
 	"github.com/valyala/fastjson"
 	"go.uber.org/zap"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -66,12 +65,9 @@ func (file *NetFile) Export() string {
 		}
 	}()
 
-	url, cookie := file.extractDownloadInfo()
-	//if cookie == "" || url == "" {
-	//	return ""
-	//}
+	url := file.extractDownloadInfo()
 
-	fileSha1 := file.extractFileSha1(url, cookie)
+	fileSha1 := file.extractFileSha1(url)
 	if fileSha1 == "" {
 		return ""
 	}
@@ -93,7 +89,7 @@ func (file *NetFile) Export() string {
 	return result
 }
 
-func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {
+func (file *NetFile) extractDownloadInfo() (downloadUrl string) {
 	downUrl := "https://proapi.115.com/app/chrome/downurl"
 	headers := config.GetFakeHeaders(true)
 	for {
@@ -125,7 +121,7 @@ func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {
 			return
 		}
 		postData := map[string]string{"data": string(text)}
-		body, response, err := utils.PostFormWithResponse(downUrl, headers, postData)
+		body, err := utils.PostForm(downUrl, headers, postData)
 		if err != nil {
 			config.Logger.Warn("export file network error",
 				zap.String("name", file.Name))
@@ -172,12 +168,6 @@ func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {
 				zap.String("name", file.Name))
 			return
 		}
-		// 下载的时候有自己单独的cookie,提取下载cookie
-		downloadCookie := extractDownloadCookie(response)
-		if downloadCookie != "" {
-			config.Logger.Warn("get download cookie fail", zap.String("name", file.Name))
-			return
-		}
 
 		downloadUrlContent, err := cipher.Decrypt([]byte(parsedDownloadBody.Data))
 		if err != nil {
@@ -192,19 +182,8 @@ func (file *NetFile) extractDownloadInfo() (downloadUrl, cookie string) {
 				zap.String("name", file.Name))
 			return
 		}
-		return extractedDownloadUrl, downloadCookie
+		return extractedDownloadUrl
 	}
-}
-
-func extractDownloadCookie(response *http.Response) string {
-	newCookie, ok := response.Header["Set-Cookie"]
-	if ok && len(newCookie) >= 1 {
-		cookies := strings.SplitN(newCookie[0], ";", 2)
-		if len(cookies) >= 2 {
-			return cookies[0]
-		}
-	}
-	return ""
 }
 
 func extractDownloadUrl(downloadContent []byte, fileId string) (string, error) {
@@ -215,9 +194,8 @@ func extractDownloadUrl(downloadContent []byte, fileId string) (string, error) {
 	return string(parsedValue.GetStringBytes(fileId, "url", "url")), nil
 }
 
-func (file *NetFile) extractFileSha1(downloadUrl, cookie string) string {
+func (file *NetFile) extractFileSha1(downloadUrl string) string {
 	downloadHeader := config.GetFakeRangeHeaders()
-	downloadHeader["Cookie"] = cookie
 
 	body, err := utils.Get(downloadUrl, downloadHeader, nil)
 	if err != nil {
