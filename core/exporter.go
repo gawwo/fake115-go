@@ -98,7 +98,7 @@ func ScanDir(cid string) *dir.Dir {
 
 func Export(cid string) {
 	dirMeta := ScanDir(cid)
-	exportName := fmt.Sprintf("%s_%s_%dGB.json", cid, dirMeta.DirName,
+	exportName := fmt.Sprintf("115sha1_%s_%dGB.json", dirMeta.DirName,
 		config.TotalSize>>30)
 	_, err := dirMeta.Dump(exportName)
 	if err != nil {
