@@ -32,12 +32,13 @@ func TestScanDirWithOffset(t *testing.T) {
 func TestExport(t *testing.T) {
 	config.Debug = true
 	config.WorkerNum = 5
-	dirMeta := core.ScanDir("1898007427015248622")
+	exporter := core.NewExporter()
+	dirMeta := exporter.ScanDir("1898007427015248622")
 	_, err := dirMeta.Dump("ump_result.json")
 	if err != nil {
 		t.Error(err.Error())
 	}
-	fmt.Printf("total size: %dGB, files: %d\n", config.TotalSize>>30, config.FileCount)
+	fmt.Printf("total size: %dGB, files: %d\n", exporter.FileTotalSize>>30, exporter.FileCount)
 }
 
 // 手动查看任务执行情况

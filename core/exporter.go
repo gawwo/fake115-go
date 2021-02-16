@@ -7,36 +7,49 @@ import (
 	"github.com/gawwo/fake115-go/utils"
 	"go.uber.org/zap"
 	"runtime"
+	"sync"
+	"time"
 )
 
-// 原地修改meta的信息，当调用结束，meta应该是一个完整的目录
-func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
-	// 递归调用的初始调用，与其他这个函数的递归调用不一样；
-	// 初始的调用，需要等待一会，让其他递归的这个函数拿到信
-	// 号量，递归的则需要放回自己的信号量；
-	var newest = false
+type ExportTask struct {
+	Dir  *dir.Dir
+	File *NetFile
+}
 
+type exporter struct {
+	taskChannel       chan ExportTask
+	consumerWaitGroup sync.WaitGroup
+	// 通过pool支持设置上限
+	producerWaitGroupPool *utils.WaitGroupPool
+	lock                  sync.Mutex
+	FileCount             int
+	FileTotalSize         int
+}
+
+func NewExporter() *exporter {
+	return &exporter{
+		taskChannel:           make(chan ExportTask, config.WorkerNum*config.WorkerNumRate),
+		consumerWaitGroup:     sync.WaitGroup{},
+		producerWaitGroupPool: utils.NewWaitGroupPool(config.WorkerNum),
+		FileCount:             0,
+		FileTotalSize:         0,
+	}
+}
+
+// 原地修改meta的信息，当调用结束，meta应该是一个完整的目录
+func (e *exporter) scanDir(cid string, meta *dir.Dir) {
 	defer func() {
 		if config.Debug {
-			fmt.Println("Dir digger on work number: ", sem.Size())
+			fmt.Println("Dir digger on work number: ", e.producerWaitGroupPool.Size())
 		}
 		// 防止goroutine过早的退出，过早退出会导致sem的Wait可能过早的
 		// 返回，但实际上下一个goroutine还没有Add到信号量，Wait
 		// 返回后还会导致传递task的通道关闭，进而导致整个任务提早结束
 		runtime.Gosched()
-
-		if !newest {
-			sem.Done()
-		}
+		e.producerWaitGroupPool.Done()
 	}()
 
-	if sem == nil {
-		sem = dir.ProducerWaitGroupPool
-		newest = true
-	} else {
-		// 太多的scanDir worker会导致阻塞，用以避免scanDir数量失控
-		sem.Add()
-	}
+	e.producerWaitGroupPool.Add()
 
 	offset := 0
 	for {
@@ -53,12 +66,12 @@ func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 				// 处理文件
 				// 把任务通过channel派发出去
 				task := ExportTask{Dir: meta, File: item}
-				ExportWorkerChannel <- task
+				e.taskChannel <- task
 			} else if item.Cid != "" {
 				// 处理文件夹
 				innerMeta := dir.NewDir()
 				meta.Dirs = append(meta.Dirs, innerMeta)
-				go scanDir(item.Cid, innerMeta, sem)
+				go e.scanDir(item.Cid, innerMeta)
 			}
 		}
 
@@ -71,40 +84,72 @@ func scanDir(cid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 			return
 		}
 	}
-
 }
 
-func ScanDir(cid string) *dir.Dir {
+func (e *exporter) ScanDir(cid string) *dir.Dir {
 	// 开启消费者
-	config.ConsumerWaitGroup.Add(config.WorkerNum)
+	e.consumerWaitGroup.Add(config.WorkerNum)
 	for i := 0; i < config.WorkerNum; i++ {
-		go ExportWorker()
+		go e.exportConsumer()
 	}
 
 	// 开启生产者
 	// meta是提取资源的抓手
 	meta := dir.NewDir()
-	scanDir(cid, meta, nil)
+	e.scanDir(cid, meta)
 
 	// 等待生产者资源枯竭之后，关闭channel
-	dir.ProducerWaitGroupPool.Wait()
-	close(ExportWorkerChannel)
+	e.producerWaitGroupPool.Wait()
+	close(e.taskChannel)
 
 	// 等待消费者完成任务
-	config.ConsumerWaitGroup.Wait()
+	e.consumerWaitGroup.Wait()
 
 	return meta
 }
 
-func Export(cid string) {
-	dirMeta := ScanDir(cid)
+func (e *exporter) exportConsumer() {
+	// WorkerChannel关闭前一直工作，直到生产者枯竭
+	for task := range e.taskChannel {
+		if config.Debug {
+			fmt.Println("channel len: ", len(e.taskChannel))
+		}
+		// 有recover，保证这里不会panic，能让任务持续进行
+		start := time.Now().Unix()
+		result := task.File.Export()
+		if result == "" {
+			config.Logger.Warn("export failed", zap.String("name", task.File.Name))
+			continue
+		}
+
+		// 监控时间太长的请求
+		elapsed := time.Now().Unix() - start
+		if elapsed > int64(3) {
+			config.Logger.Warn("task slow", zap.String("name", task.File.Name),
+				zap.Int64("elapsed", elapsed))
+		}
+
+		// 扫尾工作，添加记录到dir对象，累加文件总大小
+		e.lock.Lock()
+		task.Dir.Files = append(task.Dir.Files, result)
+		e.FileTotalSize += task.File.Size
+		e.FileCount += 1
+		e.lock.Unlock()
+	}
+	e.consumerWaitGroup.Done()
+}
+
+func Export(cid string) (path string) {
+	exporter := NewExporter()
+	dirMeta := exporter.ScanDir(cid)
 	exportName := fmt.Sprintf("115sha1_%s_%dGB.json", dirMeta.DirName,
-		config.TotalSize>>30)
-	_, err := dirMeta.Dump(exportName)
+		exporter.FileTotalSize>>30)
+	outPath, err := dirMeta.Dump(exportName)
 	if err != nil {
 		fmt.Println("导出到文件失败")
 		return
 	}
 
-	fmt.Printf("导出文件%s成功, 文件数： %d\n", exportName, config.FileCount)
+	fmt.Printf("导出文件%s成功, 文件数： %d\n", exportName, exporter.FileCount)
+	return outPath
 }
