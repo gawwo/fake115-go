@@ -2,13 +2,15 @@ package core
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"runtime"
+	"strings"
+
 	"github.com/gawwo/fake115-go/config"
 	"github.com/gawwo/fake115-go/dir"
 	"github.com/gawwo/fake115-go/utils"
 	"go.uber.org/zap"
-	"io/ioutil"
-	"os"
-	"runtime"
 )
 
 // 除非是起始的文件夹，否则其他所有任务都需要先建文件夹，再进行导入工作
@@ -100,7 +102,16 @@ func Import(cid, metaPath string) {
 		fmt.Println("读取导入文件错误")
 		return
 	}
-
+	if strings.Index(metaPath, ".txt") != -1 {
+		// 开始txt文件目录支持
+	}
+	// 支持 115优化大师导出的json "fold_name":
+	stringFold115 := string(metaBytes)
+	if strings.Index(stringFold115, "\"fold_name\":") != -1 {
+		stringFold115 = strings.Replace(stringFold115, "\"fold_name\":", "\"dir_name\":", -1)
+		stringFold115 = strings.Replace(stringFold115, "\"sub_fold\": [", "\"dirs\": [", -1)
+		metaBytes = []byte(stringFold115)
+	}
 	metaDir := dir.NewDir()
 	err = metaDir.Load(metaBytes)
 	if err != nil {
