@@ -10,9 +10,6 @@ import (
 	"os"
 )
 
-// 扫描文件夹时，用于控制扫描goroutine数量的信号量池
-var ProducerWaitGroupPool = utils.NewWaitGroupPool(config.WorkerNum)
-
 type Dir struct {
 	DirName string   `json:"dir_name"`
 	Files   []string `json:"files"`

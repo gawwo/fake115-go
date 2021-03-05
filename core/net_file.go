@@ -10,12 +10,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
 var (
-	lock       sync.Mutex
 	jsonParser fastjson.Parser
 )
 

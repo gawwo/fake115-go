@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/gawwo/fake115-go/dir"
 
@@ -17,28 +19,41 @@ import (
 	"go.uber.org/zap"
 )
 
-// 除非是起始的文件夹，否则其他所有任务都需要先建文件夹，再进行导入工作
-func importDir(pid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
-	var newest = false
+type ImportTask struct {
+	File *NetFile
+}
+
+type importer struct {
+	taskChannel       chan ImportTask
+	consumerWaitGroup sync.WaitGroup
+	// 通过pool支持设置上限
+	producerWaitGroupPool *utils.WaitGroupPool
+	lock                  sync.Mutex
+	FileCount             int
+	FileTotalSize         int
+}
+
+func NewImporter() *importer {
+	return &importer{
+		taskChannel:           make(chan ImportTask, config.WorkerNum*config.WorkerNumRate),
+		consumerWaitGroup:     sync.WaitGroup{},
+		producerWaitGroupPool: utils.NewWaitGroupPool(config.WorkerNum),
+		FileCount:             0,
+		FileTotalSize:         0,
+	}
+}
+
+func (i *importer) importDir(pid string, meta *dir.Dir) {
 	defer func() {
 		if config.Debug {
-			fmt.Println("Dir digger on work number: ", sem.Size())
+			fmt.Println("Dir digger on work number: ", i.producerWaitGroupPool.Size())
 		}
 
 		runtime.Gosched()
-
-		if !newest {
-			sem.Done()
-		}
+		i.producerWaitGroupPool.Done()
 	}()
 
-	if sem == nil {
-		sem = dir.ProducerWaitGroupPool
-		newest = true
-	} else {
-		// 当达到pool数量上限时，阻塞
-		sem.Add()
-	}
+	i.producerWaitGroupPool.Add()
 
 	var cid string
 
@@ -60,32 +75,59 @@ func importDir(pid string, meta *dir.Dir, sem *utils.WaitGroupPool) {
 		}
 		netFile.Cid = cid
 		task := ImportTask{File: netFile}
-		ImportWorkerChannel <- task
+		i.taskChannel <- task
 	}
 
 	// 处理内层的文件夹
 	for _, itemDir := range meta.Dirs {
 		if itemDir.HasFile() {
-			go importDir(cid, itemDir, sem)
+			go i.importDir(cid, itemDir)
 		}
 	}
 }
 
-func ImportDir(cid string, meta *dir.Dir) {
+func (i *importer) importConsumer() {
+	for task := range i.taskChannel {
+		if config.Debug {
+			fmt.Println("channel len: ", len(i.taskChannel))
+		}
+
+		start := time.Now().Unix()
+		result := task.File.Import()
+		if !result {
+			config.Logger.Warn("import failed", zap.String("name", task.File.Name))
+			continue
+		}
+
+		elapsed := time.Now().Unix() - start
+		if elapsed > int64(3) {
+			config.Logger.Warn("task slow", zap.String("name", task.File.Name),
+				zap.Int64("elapsed", elapsed))
+		}
+
+		i.lock.Lock()
+		i.FileTotalSize += task.File.Size
+		i.FileCount += 1
+		i.lock.Unlock()
+	}
+	i.consumerWaitGroup.Done()
+}
+
+func (i *importer) ImportDir(cid string, meta *dir.Dir) {
 	// 开启消费者
-	config.ConsumerWaitGroup.Add(config.WorkerNum)
-	for i := 0; i < config.WorkerNum; i++ {
-		go ImportWorker()
+	i.consumerWaitGroup.Add(config.WorkerNum)
+	for n := 0; n < config.WorkerNum; n++ {
+		go i.importConsumer()
 	}
 
 	// 开启生产者
-	importDir(cid, meta, nil)
+	i.importDir(cid, meta)
 
 	// 等待生产者资源枯竭之后，关闭channel
-	dir.ProducerWaitGroupPool.Wait()
-	close(ImportWorkerChannel)
+	i.producerWaitGroupPool.Wait()
+	close(i.taskChannel)
 
-	config.ConsumerWaitGroup.Wait()
+	i.consumerWaitGroup.Wait()
 }
 
 type txtDir struct {
@@ -165,7 +207,8 @@ func Import(cid, metaPath string) {
 		return
 	}
 
-	ImportDir(cid, metaDir)
+	importer := NewImporter()
+	importer.ImportDir(cid, metaDir)
 
 	fmt.Printf("导入文件%dGB，文件数%d\n", config.TotalSize>>30, config.FileCount)
 }

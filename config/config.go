@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/gawwo/fake115-go/log"
-	"sync"
 	"time"
 )
 
@@ -38,8 +37,6 @@ var (
 
 	WorkerNum     = 5
 	WorkerNumRate = 100
-
-	ConsumerWaitGroup = sync.WaitGroup{}
 
 	// 是否处于等待人机验证的状态
 	// 不是一个重要的状态，且可能的操作中都是在处理网络请
