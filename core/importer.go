@@ -210,5 +210,5 @@ func Import(cid, metaPath string) {
 	importer := NewImporter()
 	importer.ImportDir(cid, metaDir)
 
-	fmt.Printf("导入文件%dGB，文件数%d\n", config.TotalSize>>30, config.FileCount)
+	fmt.Printf("导入文件%dGB，文件数%d\n", importer.FileTotalSize>>30, importer.FileCount)
 }
