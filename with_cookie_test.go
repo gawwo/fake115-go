@@ -34,7 +34,7 @@ func TestExport(t *testing.T) {
 	config.WorkerNum = 5
 	exporter := core.NewExporter()
 	dirMeta := exporter.ScanDir("1898007427015248622")
-	_, err := dirMeta.Dump("ump_result.json")
+	_, err := dirMeta.Dump("ump_result.txt")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -44,7 +44,7 @@ func TestExport(t *testing.T) {
 // 手动查看任务执行情况
 func TestImport(t *testing.T) {
 	config.Debug = true
-	core.Import("1951041685426014426", "ump_result.json")
+	core.Import("1951041685426014426", "ump_result.txt")
 }
 
 func TestNetFileExport(t *testing.T) {
