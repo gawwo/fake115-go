@@ -25,7 +25,9 @@ func (f *FlattenTxt) Decode(file *os.File) (*dir.Dir, error) {
 		if len(parts) == normalSplitLen {
 			metaDir.Files = append(metaDir.Files, line)
 		} else {
-
+			dirParts := parts[normalSplitLen:]
+			treeNode := rebuildTree(metaDir, dirParts)
+			treeNode.Files = append(treeNode.Files, strings.Join(parts[:normalSplitLen], flattenTxtSplit))
 		}
 	}
 	return metaDir, nil
@@ -37,17 +39,19 @@ func rebuildTree(metaDir *dir.Dir, paths []string) *dir.Dir {
 		return metaDir
 	}
 
-	innerDir := &dir.Dir{}
-	for _, innerDir = range metaDir.Dirs {
+	found := false
+	expectDir := &dir.Dir{}
+	for _, innerDir := range metaDir.Dirs {
 		if innerDir.DirName == paths[0] {
-			goto find
+			found = true
+			expectDir = innerDir
 		}
 	}
 
-	innerDir.DirName = paths[0]
-	metaDir.Dirs = append(metaDir.Dirs, innerDir)
-	return rebuildTree(innerDir, paths[1:])
+	if !found {
+		expectDir.DirName = paths[0]
+		metaDir.Dirs = append(metaDir.Dirs, expectDir)
+	}
 
-find:
-	return rebuildTree(innerDir, paths[1:])
+	return rebuildTree(expectDir, paths[1:])
 }

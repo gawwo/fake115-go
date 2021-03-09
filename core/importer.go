@@ -1,14 +1,9 @@
 package core
 
 import (
-	"bufio"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"regexp"
+	"github.com/gawwo/fake115-go/compatible"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 
@@ -130,80 +125,10 @@ func (i *importer) ImportDir(cid string, meta *dir.Dir) {
 	i.consumerWaitGroup.Wait()
 }
 
-type txtDir struct {
-	DirName string   `json:"dir_name"`
-	Files   []string `json:"files"`
-	//	Dirs    []*txtDir `json:"dirs"`
-}
-
 func Import(cid, metaPath string) {
-	f, err := os.Open(metaPath)
-	if err != nil {
-		config.Logger.Error("import file not exists",
-			zap.String("reason", err.Error()),
-			zap.String("path", metaPath))
-		fmt.Println("读取导入文件错误")
-		return
-	}
-	defer f.Close()
-	metaBytes, err := ioutil.ReadAll(f)
-	if err != nil {
-		config.Logger.Error("reader import file error",
-			zap.String("reason", err.Error()),
-			zap.String("path", metaPath))
-		fmt.Println("读取导入文件错误")
-		return
-	}
-	if strings.Index(metaPath, ".txt") != -1 {
-		// 开始txt文件目录支持
-		var txtToJson txtDir
-		txtdirname := metaPath
-		reg := regexp.MustCompile(`.*/`)
-		txtdirname = reg.ReplaceAllString(txtdirname, "")
-		reg = regexp.MustCompile(`.*\\`)
-		txtdirname = reg.ReplaceAllString(txtdirname, "")
-
-		txtToJson.DirName = strings.Replace(txtdirname, `.txt`, "", -1)
-		file, err := os.Open(metaPath)
-		if err != nil {
-			println(err.Error())
-			println("没有找到" + metaPath)
-		}
-		defer file.Close()
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			txts := scanner.Text()
-			if strings.Contains(txts, "115://") { // 如果字符串里面包含了 115:// ，就进行下面的
-				fileS := strings.Replace(txts, "115://", "", -1)
-
-				fmt.Println(fileS)
-				txtToJson.Files = append([]string{fileS}, txtToJson.Files...)
-
-			} else if strings.Contains(txts, "|") { // 部分sha1 不包含 115：//
-				txtToJson.Files = append([]string{txts}, txtToJson.Files...)
-			}
-		}
-		metaBytes, err = json.Marshal(txtToJson)
-		if err != nil {
-			fmt.Println("JSON ERR:", err)
-		}
-		fmt.Println(string(metaBytes))
-
-	}
-	// 支持 115优化大师导出的json "fold_name":
-	stringFold115 := string(metaBytes)
-	if strings.Index(stringFold115, "\"fold_name\":") != -1 {
-		stringFold115 = strings.Replace(stringFold115, "\"fold_name\":", "\"dir_name\":", -1)
-		stringFold115 = strings.Replace(stringFold115, "\"sub_fold\": [", "\"dirs\": [", -1)
-		metaBytes = []byte(stringFold115)
-	}
-	metaDir := dir.NewDir()
-	err = metaDir.Load(metaBytes)
-	if err != nil {
-		config.Logger.Error("import file format error",
-			zap.String("reason", err.Error()),
-			zap.String("path", metaPath))
-		fmt.Println("导入文件格式错误")
+	metaDir := compatible.Decode(metaPath)
+	if metaDir == nil {
+		fmt.Println("未找到可处理的格式")
 		return
 	}
 
