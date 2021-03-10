@@ -8,7 +8,7 @@ import (
 )
 
 func TestDecode(t *testing.T) {
-	metaDir := Decode("ump_result.txt")
+	metaDir := Decode("shoucang.json")
 	fmt.Println(metaDir)
 }
 

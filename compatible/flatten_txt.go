@@ -2,6 +2,7 @@ package compatible
 
 import (
 	"bufio"
+	"errors"
 	"github.com/gawwo/fake115-go/dir"
 	"os"
 	"strings"
@@ -22,8 +23,11 @@ func (f *FlattenTxt) Decode(file *os.File) (*dir.Dir, error) {
 		}
 
 		parts := strings.Split(line, flattenTxtSplit)
-		if len(parts) == normalSplitLen {
+		if len(parts) < normalSplitLen {
+			return metaDir, errors.New("Format Error ")
+		} else if len(parts) == normalSplitLen {
 			metaDir.Files = append(metaDir.Files, line)
+
 		} else {
 			dirParts := parts[normalSplitLen:]
 			treeNode := rebuildTree(metaDir, dirParts)
