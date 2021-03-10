@@ -23,7 +23,7 @@ func Decode(metaPath string) *dir.Dir {
 		&JsonFormat{},
 	}
 	found := false
-	metaDir := &dir.Dir{}
+	var metaDir = &dir.Dir{}
 	for _, decoder := range decoders {
 		f, err := os.Open(metaPath)
 		if err != nil {
@@ -34,19 +34,20 @@ func Decode(metaPath string) *dir.Dir {
 			return nil
 		}
 
-		metaDir, err := decoder.Decode(f)
+		decodeDir, err := decoder.Decode(f)
+		f.Close()
 		if err != nil {
 			continue
 		}
-		if metaDir == nil {
+		if decodeDir == nil {
 			continue
 		}
-		if len(metaDir.Files) == 0 || len(metaDir.Dirs) == 0 {
+		if len(decodeDir.Files) == 0 && len(decodeDir.Dirs) == 0 {
 			continue
 		}
 
-		f.Close()
 		found = true
+		metaDir = decodeDir
 		break
 	}
 
