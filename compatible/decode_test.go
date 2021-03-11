@@ -21,7 +21,7 @@ func TestRebuildTree(t *testing.T) {
 }
 
 func TestFlattenTxtDecode(t *testing.T) {
-	file, err := os.Open("ump_result.txt")
+	file, err := os.Open("WANZ 001-999.txt")
 	if err != nil {
 		println(err.Error())
 		println("没有找到文件")

@@ -70,6 +70,7 @@ func (file *NetFile) Export() string {
 		return ""
 	}
 
+	file.Name = strings.ReplaceAll(file.Name, config.LinkSep, "_")
 	joinStrings := []string{file.Name, strconv.Itoa(file.Size), file.Sha, fileSha1}
 	result := strings.Join(joinStrings, config.LinkSep)
 

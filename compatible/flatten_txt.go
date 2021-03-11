@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"github.com/gawwo/fake115-go/dir"
+	"github.com/gawwo/fake115-go/utils"
 	"os"
 	"strings"
 )
@@ -11,7 +12,7 @@ import (
 type FlattenTxt struct{}
 
 func (f *FlattenTxt) Decode(file *os.File) (*dir.Dir, error) {
-	metaDir := &dir.Dir{DirName: file.Name()}
+	metaDir := &dir.Dir{DirName: utils.FileNameStrip(file.Name())}
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {

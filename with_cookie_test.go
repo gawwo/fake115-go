@@ -44,7 +44,7 @@ func TestExport(t *testing.T) {
 // 手动查看任务执行情况
 func TestImport(t *testing.T) {
 	config.Debug = true
-	core.Import("1951041685426014426", "ump_result.txt")
+	core.Import("1951041685426014426", "1968GB.json.txt")
 }
 
 func TestNetFileExport(t *testing.T) {
