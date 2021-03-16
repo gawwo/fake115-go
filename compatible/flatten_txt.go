@@ -2,11 +2,12 @@ package compatible
 
 import (
 	"bufio"
-	"errors"
-	"github.com/gawwo/fake115-go/dir"
-	"github.com/gawwo/fake115-go/utils"
+	"fmt"
 	"os"
 	"strings"
+
+	"github.com/gawwo/fake115-go/dir"
+	"github.com/gawwo/fake115-go/utils"
 )
 
 type FlattenTxt struct{}
@@ -17,15 +18,15 @@ func (f *FlattenTxt) Decode(file *os.File) (*dir.Dir, error) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-
-		// 部分sha1 不包含 115：//
 		if strings.HasPrefix(line, flattenTxtPrefix) {
 			line = line[len(flattenTxtPrefix):]
 		}
 
 		parts := strings.Split(line, flattenTxtSplit)
 		if len(parts) < normalSplitLen {
-			return metaDir, errors.New("Format Error ")
+			fmt.Printf("本行字符串有误 %s ", line)
+			continue
+
 		} else if len(parts) == normalSplitLen {
 			metaDir.Files = append(metaDir.Files, line)
 
@@ -38,25 +39,24 @@ func (f *FlattenTxt) Decode(file *os.File) (*dir.Dir, error) {
 	return metaDir, nil
 }
 
-func rebuildTree(metaDir *dir.Dir, paths []string) *dir.Dir {
-	// 根据路径重建目录，并返回最后一层目录
-	if len(paths) == 0 {
+func rebuildTree(metaDir *dir.Dir, dirpaths []string) *dir.Dir {
+	if len(dirpaths) == 0 {
 		return metaDir
 	}
 
 	found := false
 	expectDir := &dir.Dir{}
 	for _, innerDir := range metaDir.Dirs {
-		if innerDir.DirName == paths[0] {
+		if innerDir.DirName == dirpaths[0] {
 			found = true
 			expectDir = innerDir
 		}
 	}
 
 	if !found {
-		expectDir.DirName = paths[0]
+		expectDir.DirName = dirpaths[0]
 		metaDir.Dirs = append(metaDir.Dirs, expectDir)
 	}
 
-	return rebuildTree(expectDir, paths[1:])
+	return rebuildTree(expectDir, dirpaths[1:])
 }
