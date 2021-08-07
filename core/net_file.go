@@ -257,8 +257,10 @@ func (file *NetFile) Import() bool {
 	}
 
 	parsedImportBody := new(importBody)
+	time.Sleep(2 * time.Second)//不管如何先等2秒
 	err = json.Unmarshal(body, parsedImportBody)
 	if err != nil {
+		time.Sleep(120 * time.Second)//一旦有问题先等2分钟
 		config.Logger.Warn("parse import body fail",
 			zap.String("content", string(body)),
 			zap.String("name", file.Name))
