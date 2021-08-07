@@ -260,10 +260,12 @@ func (file *NetFile) Import() bool {
 	time.Sleep(2 * time.Second)//不管如何先等2秒
 	err = json.Unmarshal(body, parsedImportBody)
 	if err != nil {
-		time.Sleep(120 * time.Second)//一旦有问题先等2分钟
-		config.Logger.Warn("parse import body fail",
+		fmt.Sprintf("由于服务器验证,该线程需要等待两分钟.")
+		
+		config.Logger.Warn("parse import body fail and wait two minute",
 			zap.String("content", string(body)),
 			zap.String("name", file.Name))
+		time.Sleep(120 * time.Second)//一旦有问题先等2分钟
 		return false
 	}
 
