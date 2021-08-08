@@ -8,6 +8,7 @@ import (
 	"github.com/gawwo/fake115-go/log"
 	"github.com/gawwo/fake115-go/utils"
 	"os"
+	"strings"
 )
 
 var showVersion bool
@@ -25,6 +26,7 @@ func init() {
 	// 确保cookie是否真的存在
 	if config.Cookie == "" {
 		cookie, _ := utils.ReadCookieFile()
+		cookie = strings.Trim(cookie, "\n")
 		config.Cookie = cookie
 	}
 }
