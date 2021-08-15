@@ -51,6 +51,8 @@ func (e *exporter) scanDir(cid string, meta *dir.Dir) {
 
 	e.producerWaitGroupPool.Add()
 
+	time.Sleep(time.Second * time.Duration(config.NetworkInterval))
+
 	offset := 0
 	for {
 		dirInfo, err := ScanDirWithOffset(cid, offset)
@@ -115,18 +117,11 @@ func (e *exporter) exportConsumer() {
 			fmt.Println("channel len: ", len(e.taskChannel))
 		}
 		// 有recover，保证这里不会panic，能让任务持续进行
-		start := time.Now().Unix()
+		time.Sleep(time.Second * time.Duration(config.NetworkInterval))
 		result := task.File.Export()
 		if result == "" {
 			config.Logger.Warn("export failed", zap.String("name", task.File.Name))
 			continue
-		}
-
-		// 监控时间太长的请求
-		elapsed := time.Now().Unix() - start
-		if elapsed > int64(3) {
-			config.Logger.Warn("task slow", zap.String("name", task.File.Name),
-				zap.Int64("elapsed", elapsed))
 		}
 
 		// 扫尾工作，添加记录到dir对象，累加文件总大小

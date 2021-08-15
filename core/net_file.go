@@ -257,15 +257,11 @@ func (file *NetFile) Import() bool {
 	}
 
 	parsedImportBody := new(importBody)
-	time.Sleep(2 * time.Second)//不管如何先等2秒
 	err = json.Unmarshal(body, parsedImportBody)
 	if err != nil {
-		fmt.Sprintf("由于服务器验证,该线程需要等待两分钟.")
-		
-		config.Logger.Warn("parse import body fail and wait two minute",
+		config.Logger.Warn("parse import body fail",
 			zap.String("content", string(body)),
 			zap.String("name", file.Name))
-		time.Sleep(120 * time.Second)//一旦有问题先等2分钟
 		return false
 	}
 

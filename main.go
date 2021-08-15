@@ -17,6 +17,7 @@ func init() {
 	flag.BoolVar(&showVersion, "v", false, "Show version")
 	flag.BoolVar(&config.Debug, "d", false, "Debug mode")
 	flag.IntVar(&config.WorkerNum, "n", config.WorkerNum, "worker number")
+	flag.IntVar(&config.NetworkInterval, "i", config.NetworkInterval, "network interval")
 
 	// 尝试从外来配置设置cookie文件路径
 	flag.StringVar(&config.CookiePath, "cp", config.DefaultCookiePath, "Cookie Path")

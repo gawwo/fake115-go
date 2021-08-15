@@ -50,6 +50,8 @@ func (i *importer) importDir(pid string, meta *dir.Dir) {
 
 	i.producerWaitGroupPool.Add()
 
+	time.Sleep(time.Second * time.Duration(config.NetworkInterval))
+
 	var cid string
 
 	// 需要创建一下文件夹
@@ -87,17 +89,11 @@ func (i *importer) importConsumer() {
 			fmt.Println("channel len: ", len(i.taskChannel))
 		}
 
-		start := time.Now().Unix()
+		time.Sleep(time.Second * time.Duration(config.NetworkInterval))
 		result := task.File.Import()
 		if !result {
 			config.Logger.Warn("import failed", zap.String("name", task.File.Name))
 			continue
-		}
-
-		elapsed := time.Now().Unix() - start
-		if elapsed > int64(3) {
-			config.Logger.Warn("task slow", zap.String("name", task.File.Name),
-				zap.Int64("elapsed", elapsed))
 		}
 
 		i.lock.Lock()

@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	Version    = "1.3.0"
+	Version    = "1.4.0"
 	ServerName = "fake115"
 	AppVer     = "25.2.2"
 	EndString  = "000000"
@@ -31,9 +31,7 @@ var (
 	DefaultCookiePath = "cookies.txt"
 	CookiePath        = ""
 
-	TotalSize = 0
-	FileCount = 0
-	Debug     bool
+	Debug bool
 
 	WorkerNum     = 5
 	WorkerNumRate = 100
@@ -46,6 +44,8 @@ var (
 	SpiderStatWaitTimeout   = spiderCheckIntervalInt * 3
 
 	Logger = log.InitLogger(ServerName, false)
+
+	NetworkInterval = 1
 )
 
 var fakeHeaders = map[string]string{
