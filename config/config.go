@@ -33,7 +33,7 @@ var (
 
 	Debug bool
 
-	WorkerNum     = 5
+	WorkerNum     = 1
 	WorkerNumRate = 100
 
 	// 是否处于等待人机验证的状态
@@ -45,7 +45,7 @@ var (
 
 	Logger = log.InitLogger(ServerName, false)
 
-	NetworkInterval = 1
+	NetworkInterval = 3
 )
 
 var fakeHeaders = map[string]string{
