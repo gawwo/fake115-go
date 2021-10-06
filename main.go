@@ -14,16 +14,17 @@ import (
 var showVersion bool
 
 func init() {
-	flag.BoolVar(&showVersion, "v", false, "Show version")
-	flag.BoolVar(&config.Debug, "d", false, "Debug mode")
-	flag.IntVar(&config.WorkerNum, "n", config.WorkerNum, "worker number")
-	flag.IntVar(&config.NetworkInterval, "i", config.NetworkInterval, "network interval")
+	flag.BoolVar(&showVersion, "v", false, "显示版本")
+	flag.BoolVar(&config.Debug, "d", false, "调试模式")
+	flag.IntVar(&config.WorkerNum, "n", config.WorkerNum, "同时进行的数量")
+	flag.IntVar(&config.NetworkInterval, "i", config.NetworkInterval, "网络等待间隔")
+	flag.IntVar(&config.FilterSize, "f", config.FilterSize, "过滤小于此大小的文件，单位KB")
 
 	// 尝试从外来配置设置cookie文件路径
-	flag.StringVar(&config.CookiePath, "cp", config.DefaultCookiePath, "Cookie Path")
+	flag.StringVar(&config.CookiePath, "cp", config.DefaultCookiePath, "Cookie文件路径")
 
 	// 尝试从外来配置设置cookie
-	flag.StringVar(&config.Cookie, "c", "", "Cookies")
+	flag.StringVar(&config.Cookie, "c", "", "Cookie内容")
 	// 确保cookie是否真的存在
 	if config.Cookie == "" {
 		cookie, _ := utils.ReadCookieFile()

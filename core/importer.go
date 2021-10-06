@@ -70,6 +70,10 @@ func (i *importer) importDir(pid string, meta *dir.Dir) {
 				zap.String("content", fileString))
 			continue
 		}
+		// 过滤太小的文件
+		if config.FilterSize<<10 > netFile.Size {
+			continue
+		}
 		netFile.Cid = cid
 		task := ImportTask{File: netFile}
 		i.taskChannel <- task

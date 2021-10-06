@@ -65,6 +65,10 @@ func (e *exporter) scanDir(cid string, meta *dir.Dir) {
 
 		for _, item := range dirInfo.Data {
 			if item.Fid != "" {
+				// 过滤太小的文件
+				if config.FilterSize<<10 > item.Size {
+					continue
+				}
 				// 处理文件
 				// 把任务通过channel派发出去
 				task := ExportTask{Dir: meta, File: item}

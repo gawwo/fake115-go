@@ -25,7 +25,7 @@ var (
 	UserId     = ""
 	UserKey    = ""
 	Step       = 1150
-	// Cookie提供文件读取和命令行设置两种方式；
+	// Cookie 提供文件读取和命令行设置两种方式；
 	// 文件读取提供默认设置和命令行设置两种方式；
 	Cookie            = ""
 	DefaultCookiePath = "cookies.txt"
@@ -36,7 +36,7 @@ var (
 	WorkerNum     = 1
 	WorkerNumRate = 100
 
-	// 是否处于等待人机验证的状态
+	// SpiderVerification 是否处于等待人机验证的状态
 	// 不是一个重要的状态，且可能的操作中都是在处理网络请
 	// 求处理之后，冲突可能极小，不加读写锁，随便改
 	SpiderVerification      = false
@@ -46,6 +46,9 @@ var (
 	Logger = log.InitLogger(ServerName, false)
 
 	NetworkInterval = 3
+	// FilterSize 115对文件导入导出频率进行限制后，不能再像以前那样大量导出
+	// 文件，添加小文件过滤以提高效率
+	FilterSize = 0
 )
 
 var fakeHeaders = map[string]string{
