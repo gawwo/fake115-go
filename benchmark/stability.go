@@ -66,14 +66,3 @@ func doMultiRequest(url string) bool {
 	}
 	return true
 }
-
-// 并未发现有内存泄漏的问题
-func DoMultiRequest() {
-	url := "http://localhost:8441/"
-	for i := 0; i < 50; i++ {
-		wgp.Add()
-		go doMultiRequest(url)
-	}
-
-	wgp.Wait()
-}
