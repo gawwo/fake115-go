@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-// 一定要在main中的init函数之后运行
+// ReadCookieFile 一定要在main中的init函数之后运行
 func ReadCookieFile() (string, error) {
 	cookieFile, err := os.Open(config.CookiePath)
 	if err != nil {
