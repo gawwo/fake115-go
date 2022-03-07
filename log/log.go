@@ -124,29 +124,29 @@ func InitLogger(serverName string, stdout bool) *zap.Logger {
 	return zap.New(core, caller, trace, development, filed)
 }
 
-// 不区分不同级别日志文件
+// FileLogger 不区分不同级别日志文件
 func FileLogger() *zap.Logger {
-    // 动态调整日志级别
-    allLevel := zap.NewAtomicLevel()
+	// 动态调整日志级别
+	allLevel := zap.NewAtomicLevel()
 
-    hook := lumberjack.Logger{
-        Filename:   "./logs/logs.log",
-        MaxSize:    1024, // megabytes
-        MaxBackups: 3,
-        MaxAge:     7,    //days
-        Compress:   true, // disabled by default
-    }
-    w := zapcore.AddSync(&hook)
+	hook := lumberjack.Logger{
+		Filename:   "./logs/logs.log",
+		MaxSize:    1024, // megabytes
+		MaxBackups: 3,
+		MaxAge:     7,    //days
+		Compress:   true, // disabled by default
+	}
+	w := zapcore.AddSync(&hook)
 
-    allLevel.SetLevel(zap.InfoLevel)
-    encoderConfig := zap.NewProductionEncoderConfig()
-    encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	allLevel.SetLevel(zap.InfoLevel)
+	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 
-    core := zapcore.NewCore(
-        zapcore.NewConsoleEncoder(encoderConfig),
-        w,
+	core := zapcore.NewCore(
+		zapcore.NewConsoleEncoder(encoderConfig),
+		w,
 		allLevel,
-    )
+	)
 
-    return zap.New(core)
+	return zap.New(core)
 }
