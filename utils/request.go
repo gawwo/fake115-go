@@ -17,7 +17,7 @@ import (
 
 const RetryTimes = 10
 
-// 不要反复创建Client，它应该全局唯一
+// NewClient 不要反复创建Client，它应该全局唯一
 func NewClient() *http.Client {
 	dialer := &net.Dialer{
 		Timeout:   3 * time.Second,
@@ -117,12 +117,6 @@ func GetWithResponse(urlGet string, headers map[string]string, data map[string]s
 func PostForm(urlPost string, headers map[string]string, data map[string]string) ([]byte, error) {
 	body, _, err := postByte(urlPost, headers, data, false)
 	return body, err
-}
-
-func PostFormWithResponse(urlPost string, headers map[string]string,
-	data map[string]string) ([]byte, *http.Response, error) {
-	body, response, err := postByte(urlPost, headers, data, true)
-	return body, response, err
 }
 
 func readBody(res *http.Response, withResponse bool) ([]byte, *http.Response, error) {
