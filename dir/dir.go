@@ -22,7 +22,7 @@ type dirMake struct {
 	Cid   string `json:"cid"`
 }
 
-// 强行指定初始化，防止json之后，Dirs和Files为null
+// NewDir 强行指定初始化，防止json之后，Dirs和Files为null
 func NewDir() *Dir {
 	return &Dir{Dirs: []*Dir{}, Files: []string{}}
 }
@@ -36,7 +36,7 @@ func (dir *Dir) Dumps() ([]byte, error) {
 	return data, nil
 }
 
-// 导出到文件中
+// Dump 导出到文件中
 func (dir *Dir) Dump(outPath string) (string, error) {
 	data, err := dir.Dumps()
 	if err != nil {
@@ -67,7 +67,7 @@ func (dir *Dir) Load(fileContent []byte) error {
 	return nil
 }
 
-// 递归探测文件夹中是否有文件
+// HasFile 递归探测文件夹中是否有文件
 func (dir *Dir) HasFile() bool {
 	if len(dir.Files) > 0 {
 		return true
@@ -81,7 +81,7 @@ func (dir *Dir) HasFile() bool {
 	return false
 }
 
-// 创建新的文件夹
+// MakeNetDir 创建新的文件夹
 func (dir *Dir) MakeNetDir(pid string) string {
 	defer func() {
 		if err := recover(); err != nil {
