@@ -17,7 +17,7 @@ var (
 	jsonParser fastjson.Parser
 )
 
-// 115的文件对象，这个对象指向的可能是文件，也可能是文件夹
+// NetFile 115的文件对象，这个对象指向的可能是文件，也可能是文件夹
 type NetFile struct {
 	// 有fid就是文件
 	Fid string `json:"fid"`
@@ -42,7 +42,7 @@ type importBody struct {
 	StatusCode int `json:"statuscode"`
 }
 
-// 开启一定量的worker，通过channel接收任务，channel有一定的缓冲区
+// Export 开启一定量的worker，通过channel接收任务，channel有一定的缓冲区
 // worker在接收到任务后执行任务，当遇到需要人机验证的时候，改变全局
 // 变量，然后进入循环等待模式，期间一直检测，直到人机验证完成；
 // Note: 只要用到Lock的地方，都要考虑超时问题
@@ -206,7 +206,7 @@ func (file *NetFile) extractFileSha1(downloadUrl string) string {
 	return strings.ToUpper(sha1)
 }
 
-// 导入时，要指定文件所属的Cid（文件夹），文件夹不存在就需要创建；
+// Import 导入时，要指定文件所属的Cid（文件夹），文件夹不存在就需要创建；
 // 创建文件夹的方法是，指定这个文件夹的父文件夹，填入文件夹的名字
 // 之后创建，返回Cid，在做这个任务的时候，Cid需要是创建好的文件夹；
 // 创建文件夹的工作在调用这个函数的地方提前准备好，这里不涉及创建文
@@ -284,7 +284,7 @@ func (file *NetFile) Import() bool {
 	}
 }
 
-// 格式不对，创建NetFile不一定成功
+// CreateNetFile 格式不对，创建NetFile不一定成功
 func CreateNetFile(fileInfo string) *NetFile {
 	splitStrings := strings.Split(fileInfo, config.LinkSep)
 	if len(splitStrings) != 4 {
