@@ -45,6 +45,9 @@ func Request(method, url string, body io.Reader, headers map[string]string) (*ht
 	if err != nil {
 		return nil, err
 	}
+	if headers == nil {
+		headers = map[string]string{}
+	}
 	// 设置可能缺少的默认参数
 	if _, ok := headers["Connection"]; !ok {
 		headers["Connection"] = "keep-alive"
@@ -108,10 +111,6 @@ func get(urlGet string, headers map[string]string, data map[string]string, withR
 func Get(urlGet string, headers map[string]string, data map[string]string) ([]byte, error) {
 	body, _, err := get(urlGet, headers, data, false)
 	return body, err
-}
-
-func GetWithResponse(urlGet string, headers map[string]string, data map[string]string) ([]byte, *http.Response, error) {
-	return get(urlGet, headers, data, true)
 }
 
 func PostForm(urlPost string, headers map[string]string, data map[string]string) ([]byte, error) {
